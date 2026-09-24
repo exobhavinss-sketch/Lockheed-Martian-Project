@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 350" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgDarkstar" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#05080e" />
+      <stop offset="100%" stop-color="#0c1322" />
+    </linearGradient>
+    <linearGradient id="bodyDarkstar" x1="0%" y1="0%" x2="100%" y2="60%">
+      <stop offset="0%" stop-color="#1f2937" />
+      <stop offset="100%" stop-color="#111827" />
+    </linearGradient>
+  </defs>
+  <!-- Background Card -->
+  <rect width="600" height="350" fill="url(#bgDarkstar)" />
+  <!-- Grid lines -->
+  <path d="M0 50 H600 M0 100 H600 M0 150 H600 M0 200 H600 M0 250 H600 M0 300 H600" stroke="#141f30" stroke-width="1" stroke-dasharray="4 4" />
+  <path d="M100 0 V350 M200 0 V350 M300 0 V350 M400 0 V350 M500 0 V350" stroke="#141f30" stroke-width="1" stroke-dasharray="4 4" />
+
+  <!-- SR-71 Darkstar Hypersonic Waverider Silhouette (Top View) -->
+  <g transform="translate(300, 160) scale(1.0)">
+    <!-- Main Hypersonic Waverider Body -->
+    <path d="M 0,-130
+             L 10,-80
+             L 28,-10
+             L 85,45
+             L 75,70
+             L 30,60
+             L 24,85
+             L 0,78
+             L -24,85
+             L -30,60
+             L -75,70
+             L -85,45
+             L -28,-10
+             L -10,-80 Z"
+          fill="url(#bodyDarkstar)" stroke="#4b5563" stroke-width="2" />
+    <!-- Compression Lift Forebody Ridges -->
+    <line x1="0" y1="-130" x2="0" y2="78" stroke="#06b6d4" stroke-width="1.2" stroke-opacity="0.8" />
+    <line x1="0" y1="-70" x2="28" y2="-10" stroke="#374151" stroke-width="1.2" />
+    <line x1="0" y1="-70" x2="-28" y2="-10" stroke="#374151" stroke-width="1.2" />
+    <!-- Flush Hypersonic Canopy Window -->
+    <polygon points="0,-72 4,-50 -4,-50" fill="#030712" stroke="#38bdf8" stroke-width="1.2" />
+    <!-- Twin Scramjet Dual Engine Nozzles -->
+    <rect x="-18" y="72" width="14" height="8" rx="2" fill="#0284c7" stroke="#38bdf8" stroke-width="1" />
+    <rect x="4" y="72" width="14" height="8" rx="2" fill="#0284c7" stroke="#38bdf8" stroke-width="1" />
+    <!-- Canted Winglet Stabilizers -->
+    <polygon points="75,70 85,45 88,65" fill="#374151" stroke="#9ca3af" stroke-width="1" />
+    <polygon points="-75,70 -85,45 -88,65" fill="#374151" stroke="#9ca3af" stroke-width="1" />
+  </g>
+
+  <!-- Aircraft Label Overlay -->
+  <rect x="20" y="285" width="230" height="42" rx="4" fill="#060d17" fill-opacity="0.85" stroke="#2c3e55" stroke-width="1" />
+  <text x="32" y="304" fill="#ffffff" font-family="Arial, sans-serif" font-size="14" font-weight="bold">SR-71 DARKSTAR</text>
+  <text x="32" y="320" fill="#94a3b8" font-family="Arial, sans-serif" font-size="11">Mach 10 Hypersonic Concept</text>
+</svg>

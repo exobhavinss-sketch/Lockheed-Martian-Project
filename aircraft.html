@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aircraft Collection | Lockheed Martin Aircraft</title>
+    <meta name="description" content="Browse our comprehensive collection of Lockheed Martin aircraft, featuring fighters, transports, reconnaissance, and helicopters.">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Header Section -->
+    <header class="site-header">
+        <div class="header-container">
+            <h1>Aircraft Collection</h1>
+            <p class="header-subtitle">Explore selected aircraft and aerospace platforms.</p>
+        </div>
+    </header>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="aircraft.html" class="active">Aircraft</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="contact.html">Contact</a></li>
+            <li><a href="signin.html">Sign In</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+
+        <!-- Search and Category Filter Section -->
+        <section class="search-filter-section" id="search-filter-section">
+            <div class="section-container">
+                <div class="search-filter-card">
+                    <div class="search-filter-header">
+                        <h2>SEARCH AIRCRAFT</h2>
+                        <p class="search-filter-subtitle">Find aircraft by name or filter by category.</p>
+                    </div>
+
+                    <form class="search-filter-form" onsubmit="event.preventDefault();">
+                        <!-- Search Box Field -->
+                        <div class="filter-group search-box">
+                            <label for="aircraftSearch">Search Aircraft</label>
+                            <input 
+                                type="text" 
+                                id="aircraftSearch" 
+                                name="aircraftSearch" 
+                                placeholder="Search aircraft..." 
+                                autocomplete="off"
+                            >
+                        </div>
+
+                        <!-- Category Filter Dropdown -->
+                        <div class="filter-group category-filter">
+                            <label for="categoryFilter">Filter by Category</label>
+                            <select id="categoryFilter" name="categoryFilter">
+                                <option value="All Aircraft">All Aircraft</option>
+                                <option value="Fighter Aircraft">Fighter Aircraft</option>
+                                <option value="Transport Aircraft">Transport Aircraft</option>
+                                <option value="Spy & Reconnaissance Aircraft">Spy &amp; Reconnaissance Aircraft</option>
+                                <option value="Helicopters">Helicopters</option>
+                                <option value="Special Mission Aircraft">Special Mission Aircraft</option>
+                            </select>
+                        </div>
+
+                        <!-- Reset Button -->
+                        <div class="filter-group filter-actions">
+                            <button type="button" id="resetFilters" class="btn-card reset-button">Reset Filters</button>
+                        </div>
+                    </form>
+
+                    <!-- Filter Status Bar: Result Count & No Results Message -->
+                    <div class="filter-status-bar">
+                        <p id="aircraftCount" class="aircraft-count">Showing 10 aircraft</p>
+                        <p id="noResultsMessage" class="no-results-message" style="display: none;">No aircraft found matching your search.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Category 1: Fighter Aircraft -->
+        <section class="aircraft-category-section" id="fighter-aircraft" data-category-section="Fighter Aircraft">
+            <div class="section-container">
+                <div class="category-group-header">
+                    <h2>Fighter Aircraft</h2>
+                    <p>High-performance combat aircraft engineered for air superiority, fleet defense, and tactical multirole operations.</p>
+                </div>
+                <div class="aircraft-grid">
+
+                    <!-- Aircraft Card 1: F-35 Lightning II -->
+                    <article class="aircraft-card" data-name="F-35 Lightning II" data-category="Fighter Aircraft">
+                        <figure>
+                            <img src="images/F-35 Lightning 2.jpg" alt="F-35 Lightning II stealth multirole fighter">
+                            <figcaption>F-35 Lightning II</figcaption>
+                        </figure>
+                        <h3>F-35 Lightning II</h3>
+                        <p class="aircraft-category"><strong>Category:</strong> Fighter Aircraft</p>
+                        <p class="aircraft-desc">An advanced 5th generation multirole stealth fighter designed for air superiority and strike missions.</p>
+                        <a href="aircraft-details.html?aircraft=f35" class="btn-card">View Details</a>
+                    </article>
+
+                    <!-- Aircraft Card 2: F-22 Raptor -->
+                    <article class="aircraft-card" data-name="F-22 Raptor" data-category="Fighter Aircraft">
+                        <figure>
+                            <img src="images/F22 Raptor.webp" alt="F-22 Raptor air superiority stealth fighter">
+                            <figcaption>F-22 Raptor</figcaption>
+                        </figure>
+                        <h3>F-22 Raptor</h3>
+                        <p class="aircraft-category"><strong>Category:</strong> Fighter Aircraft</p>
+                        <p class="aircraft-desc">A premier 5th generation tactical stealth fighter renowned for extreme speed, agility, and situational awareness.</p>
+                        <a href="aircraft-details.html?aircraft=f22" class="btn-card">View Details</a>
+                    </article>
+
+                    <!-- Aircraft Card 3: F-16 Fighting Falcon -->
+                    <article class="aircraft-card" data-name="F-16 Fighting Falcon" data-category="Fighter Aircraft">
+                        <figure>
+                            <img src="images/F 16 Fighting Falcon 2.webp" alt="F-16 Fighting Falcon supersonic multirole fighter">
+                            <figcaption>F-16 Fighting Falcon</figcaption>
+                        </figure>
+                        <h3>F-16 Fighting Falcon</h3>
+                        <p class="aircraft-category"><strong>Category:</strong> Fighter Aircraft</p>
+                        <p class="aircraft-desc">A highly agile supersonic multirole fighter aircraft used extensively for air combat and tactical missions.</p>
+                        <a href="aircraft-details.html?aircraft=f16" class="btn-card">View Details</a>
+                    </article>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Category 2: Spy & Reconnaissance Aircraft -->
+        <section class="aircraft-category-section bg-alt" id="stealth-special-aircraft" data-category-section="Spy & Reconnaissance Aircraft">
+            <div class="section-container">
+                <div class="category-group-header">
+                    <h2>Spy &amp; Reconnaissance Aircraft</h2>
+                    <p>Advanced low-observable and high-altitude reconnaissance aircraft designed for specialized, experimental, and historic missions.</p>
+                </div>
+                <div class="aircraft-grid">
+
+                    <!-- Aircraft Card 4: F-117 Nighthawk -->
+                    <article class="aircraft-card" data-name="F-117 Nighthawk" data-category="Spy & Reconnaissance Aircraft">
+                        <figure>
+                            <img src="images/F117 Nighthawk.jpeg" alt="F-117 Nighthawk precision attack stealth aircraft">
+                            <figcaption>F-117 Nighthawk</figcaption>
+                        </figure>
+                        <h3>F-117 Nighthawk</h3>
+                        <p class="aircraft-category"><strong>Category:</strong> Spy &amp; Reconnaissance Aircraft</p>
+                        <p class="special-label label-historic">Historic Aircraft</p>
+                        <p class="aircraft-desc">A pioneering precision strike aircraft designed with stealth technology to operate undetected by radar.</p>
+                        <a href="aircraft-details.html?aircraft=f117" class="btn-card">View Details</a>
+                    </article>
+
+                    <!-- Aircraft Card 5: SR-71 Blackbird -->
+                    <article class="aircraft-card" data-name="SR-71 Blackbird" data-category="Spy & Reconnaissance Aircraft">
+                        <figure>
+                            <img src="images/SR 71 BlackBird.avif" alt="SR-71 Blackbird high-altitude Mach 3 reconnaissance aircraft">
+                            <figcaption>SR-71 Blackbird</figcaption>
+                        </figure>
+                        <h3>SR-71 Blackbird</h3>
+                        <p class="aircraft-category"><strong>Category:</strong> Spy &amp; Reconnaissance Aircraft</p>
+                        <p class="special-label label-high-value">High Value</p>
+                        <p class="aircraft-desc">A legendary long-range reconnaissance aircraft engineered to cruise at Mach 3 speeds and extreme altitudes.</p>
+                        <a href="aircraft-details.html?aircraft=sr71" class="btn-card">View Details</a>
+                    </article>
+
+                    <!-- Aircraft Card 6: SR-71 Darkstar -->
+                    <article class="aircraft-card" data-name="SR-71 Darkstar" data-category="Spy & Reconnaissance Aircraft">
+                        <figure>
+                            <img src="images/SR 72 Darkstar.jpeg" alt="SR-71 Darkstar hypersonic experimental concept aircraft">
+                            <figcaption>SR-71 Darkstar</figcaption>
+                        </figure>
+                        <h3>SR-71 Darkstar</h3>
+                        <p class="aircraft-category"><strong>Category:</strong> Spy &amp; Reconnaissance Aircraft</p>
+                        <p class="special-label label-fictional">Fictional Concept</p>
+                        <p class="aircraft-desc">A fictional hypersonic concept aircraft created for entertainment and conceptual exploration of Mach 10 flight, not a real historical aircraft.</p>
+                        <a href="aircraft-details.html?aircraft=darkstar" class="btn-card">View Details</a>
+                    </article>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Category 3: Transport Aircraft -->
+        <section class="aircraft-category-section" id="transport-aircraft" data-category-section="Transport Aircraft">
+            <div class="section-container">
+                <div class="category-group-header">
+                    <h2>Transport Aircraft</h2>
+                    <p>Heavy-duty, long-range transport planes built to deploy personnel, humanitarian aid, vehicles, and military cargo worldwide.</p>
+                </div>
+                <div class="aircraft-grid">
+
+                    <!-- Aircraft Card 7: C-5 Galaxy -->
+                    <article class="aircraft-card" data-name="C-5 Galaxy" data-category="Transport Aircraft">
+                        <figure>
+                            <img src="images/C5 Galaxy.jpg" alt="C-5 Galaxy heavy strategic military airlifter">
+                            <figcaption>C-5 Galaxy</figcaption>
+                        </figure>
+                        <h3>C-5 Galaxy</h3>
+                        <p class="aircraft-category"><strong>Category:</strong> Transport Aircraft</p>
+                        <p class="aircraft-desc">A heavy strategic military airlifter designed to transport oversized cargo and vehicles across global distances.</p>
+                        <a href="aircraft-details.html?aircraft=c5" class="btn-card">View Details</a>
+                    </article>
+
+                    <!-- Aircraft Card 8: C-130 Hercules -->
+                    <article class="aircraft-card" data-name="C-130 Hercules" data-category="Transport Aircraft">
+                        <figure>
+                            <img src="images/C130 Hercules.jpeg" alt="C-130 Hercules tactical military transport aircraft">
+                            <figcaption>C-130 Hercules</figcaption>
+                        </figure>
+                        <h3>C-130 Hercules</h3>
+                        <p class="aircraft-category"><strong>Category:</strong> Transport Aircraft</p>
+                        <p class="aircraft-desc">A versatile four-engine turboprop military transport capable of operating from unprepared runways in demanding environments.</p>
+                        <a href="aircraft-details.html?aircraft=c130" class="btn-card">View Details</a>
+                    </article>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Category 4: Helicopters -->
+        <section class="aircraft-category-section bg-alt" id="helicopter" data-category-section="Helicopters">
+            <div class="section-container">
+                <div class="category-group-header">
+                    <h2>Helicopters</h2>
+                    <p>Heavy-lift rotary-wing aircraft engineered for demanding transport, logistics, and combat support operations.</p>
+                </div>
+                <div class="aircraft-grid">
+
+                    <!-- Aircraft Card 9: CH-53K King Stallion -->
+                    <article class="aircraft-card" data-name="CH-53K King Stallion" data-category="Helicopters">
+                        <figure>
+                            <img src="images/CH 53K.jpg" alt="CH-53K King Stallion heavy-lift transport helicopter">
+                            <figcaption>CH-53K King Stallion</figcaption>
+                        </figure>
+                        <h3>CH-53K King Stallion</h3>
+                        <p class="aircraft-category"><strong>Category:</strong> Helicopters</p>
+                        <p class="aircraft-desc">A heavy-lift military cargo helicopter engineered to transport heavy equipment, vehicles, and personnel.</p>
+                        <a href="aircraft-details.html?aircraft=ch53k" class="btn-card">View Details</a>
+                    </article>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Category 5: Special Mission Aircraft -->
+        <section class="aircraft-category-section" id="special-mission" data-category-section="Special Mission Aircraft">
+            <div class="section-container">
+                <div class="category-group-header">
+                    <h2>Special Mission Aircraft</h2>
+                    <p>Customized platforms designed for specialized roles including executive travel, presidential transport, and government missions.</p>
+                </div>
+                <div class="aircraft-grid">
+
+                    <!-- Aircraft Card 10: VH-92 Patriot -->
+                    <article class="aircraft-card" data-name="VH-92 Patriot" data-category="Special Mission Aircraft">
+                        <figure>
+                            <img src="images/VH 92.jpeg" alt="VH-92 Patriot presidential transport executive helicopter">
+                            <figcaption>VH-92 Patriot</figcaption>
+                        </figure>
+                        <h3>VH-92 Patriot</h3>
+                        <p class="aircraft-category"><strong>Category:</strong> Special Mission Aircraft</p>
+                        <p class="special-label label-special-mission">Special Mission</p>
+                        <p class="aircraft-desc">A secure presidential transport helicopter built to provide executive transport for the President of the United States.</p>
+                        <a href="aircraft-details.html?aircraft=vh92" class="btn-card">View Details</a>
+                    </article>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Aircraft Information Table Section -->
+        <section class="table-section" id="aircraft-info">
+            <div class="section-container">
+                <h2>Aircraft Information</h2>
+                <p class="table-section-desc">Summary of selected aircraft, their categories, operational roles, and service status.</p>
+                <div class="table-responsive">
+                    <table class="aircraft-table">
+                        <thead>
+                            <tr>
+                                <th>Aircraft</th>
+                                <th>Category</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>F-35 Lightning II</td>
+                                <td>Fighter Aircraft</td>
+                                <td>Stealth Multirole Fighter</td>
+                                <td>Active</td>
+                            </tr>
+                            <tr>
+                                <td>F-22 Raptor</td>
+                                <td>Fighter Aircraft</td>
+                                <td>Air Superiority Fighter</td>
+                                <td>Active</td>
+                            </tr>
+                            <tr>
+                                <td>F-16 Fighting Falcon</td>
+                                <td>Fighter Aircraft</td>
+                                <td>Multirole Combat Fighter</td>
+                                <td>Active</td>
+                            </tr>
+                            <tr>
+                                <td>F-117 Nighthawk</td>
+                                <td>Stealth / Special Aircraft</td>
+                                <td>Stealth Ground Attack</td>
+                                <td>Retired (Historic Aircraft)</td>
+                            </tr>
+                            <tr>
+                                <td>SR-71 Blackbird</td>
+                                <td>Stealth / Special Aircraft</td>
+                                <td>Strategic Reconnaissance</td>
+                                <td>Retired (High Value)</td>
+                            </tr>
+                            <tr>
+                                <td>SR-71 Darkstar</td>
+                                <td>Stealth / Special Aircraft</td>
+                                <td>Hypersonic Test Vehicle</td>
+                                <td>Fictional Concept</td>
+                            </tr>
+                            <tr>
+                                <td>C-5 Galaxy</td>
+                                <td>Transport Aircraft</td>
+                                <td>Strategic Heavy Airlift</td>
+                                <td>Active</td>
+                            </tr>
+                            <tr>
+                                <td>C-130 Hercules</td>
+                                <td>Transport Aircraft</td>
+                                <td>Tactical Airlift &amp; Transport</td>
+                                <td>Active</td>
+                            </tr>
+                            <tr>
+                                <td>CH-53K King Stallion</td>
+                                <td>Helicopter</td>
+                                <td>Heavy-Lift Cargo Transport</td>
+                                <td>Active</td>
+                            </tr>
+                            <tr>
+                                <td>VH-92 Patriot</td>
+                                <td>Special Mission / Presidential Transport</td>
+                                <td>Presidential Executive Transport</td>
+                                <td>Active (Special Mission)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Aircraft Categories List Section -->
+        <section class="category-list-showcase" id="aircraft-categories">
+            <div class="section-container">
+                <h2>Aircraft Categories</h2>
+                <p>Explore the five core categories represented across this educational aircraft collection.</p>
+                <ul class="simple-category-list">
+                    <li>Fighter Aircraft</li>
+                    <li>Stealth / Special Aircraft</li>
+                    <li>Transport Aircraft</li>
+                    <li>Helicopter</li>
+                    <li>Special Mission / Presidential Transport</li>
+                </ul>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer Section -->
+    <footer class="site-footer">
+        <div class="footer-container">
+            <p class="footer-note">Student Educational Project</p>
+            <p class="footer-copy">&copy; 2026 Lockheed Martin Aircraft</p>
+            <nav class="footer-nav">
+                <a href="index.html">Home</a>
+                <a href="aircraft.html">Aircraft</a>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <a href="signin.html">Sign In</a>
+            </nav>
+        </div>
+    </footer>
+
+    <!-- JavaScript File -->
+    <script src="js/script.js"></script>
+
+</body>
+</html>

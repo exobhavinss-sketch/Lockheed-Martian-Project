@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 350" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgC5" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#091322" />
+      <stop offset="100%" stop-color="#142338" />
+    </linearGradient>
+    <linearGradient id="planeC5" x1="0%" y1="0%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#94a3b8" />
+      <stop offset="100%" stop-color="#475569" />
+    </linearGradient>
+  </defs>
+  <!-- Background Card -->
+  <rect width="600" height="350" fill="url(#bgC5)" />
+  <!-- Grid lines -->
+  <path d="M0 50 H600 M0 100 H600 M0 150 H600 M0 200 H600 M0 250 H600 M0 300 H600" stroke="#1a2d47" stroke-width="1" stroke-dasharray="4 4" />
+  <path d="M100 0 V350 M200 0 V350 M300 0 V350 M400 0 V350 M500 0 V350" stroke="#1a2d47" stroke-width="1" stroke-dasharray="4 4" />
+
+  <!-- C-5 Galaxy Silhouette (Top View) -->
+  <g transform="translate(300, 160) scale(0.9)">
+    <!-- Fuselage Body -->
+    <path d="M 0,-130
+             C 24,-100 24,-20 24,70
+             L 16,110
+             L 0,125
+             L -16,110
+             L -24,70
+             C -24,-20 -24,-100 0,-130 Z"
+          fill="url(#planeC5)" stroke="#cbd5e1" stroke-width="2" />
+    <!-- Swept Wings -->
+    <path d="M -24,-30
+             L -170,30
+             L -165,55
+             L -24,15
+             L 24,15
+             L 165,55
+             L 170,30
+             L 24,-30 Z"
+          fill="url(#planeC5)" stroke="#cbd5e1" stroke-width="2" />
+    <!-- Iconic T-Tail Horizontal Stabilizer -->
+    <path d="M -10,105
+             L -75,115
+             L -72,128
+             L -8,124
+             L 8,124
+             L 72,128
+             L 75,115
+             L 10,105 Z"
+          fill="url(#planeC5)" stroke="#cbd5e1" stroke-width="1.8" />
+    <!-- Flight Deck Cockpit Windows -->
+    <ellipse cx="0" cy="-105" rx="12" ry="7" fill="#0b1320" stroke="#38bdf8" stroke-width="1" />
+    <!-- 4 Turbofan Jet Engines on Wing Pylons -->
+    <!-- Left Inner & Outer -->
+    <rect x="-70" y="5" width="14" height="38" rx="5" fill="#1e293b" stroke="#94a3b8" stroke-width="1.2" />
+    <circle cx="-63" cy="5" r="5" fill="#475569" />
+    <rect x="-125" y="25" width="13" height="35" rx="5" fill="#1e293b" stroke="#94a3b8" stroke-width="1.2" />
+    <circle cx="-118.5" cy="25" r="4.5" fill="#475569" />
+    <!-- Right Inner & Outer -->
+    <rect x="56" y="5" width="14" height="38" rx="5" fill="#1e293b" stroke="#94a3b8" stroke-width="1.2" />
+    <circle cx="63" cy="5" r="5" fill="#475569" />
+    <rect x="112" y="25" width="13" height="35" rx="5" fill="#1e293b" stroke="#94a3b8" stroke-width="1.2" />
+    <circle cx="118.5" cy="25" r="4.5" fill="#475569" />
+  </g>
+
+  <!-- Aircraft Label Overlay -->
+  <rect x="20" y="285" width="230" height="42" rx="4" fill="#060d17" fill-opacity="0.85" stroke="#2c3e55" stroke-width="1" />
+  <text x="32" y="304" fill="#ffffff" font-family="Arial, sans-serif" font-size="14" font-weight="bold">C-5 GALAXY</text>
+  <text x="32" y="320" fill="#94a3b8" font-family="Arial, sans-serif" font-size="11">Strategic Heavy Military Airlifter</text>
+</svg>

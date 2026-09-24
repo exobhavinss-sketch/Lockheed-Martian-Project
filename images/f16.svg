@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 350" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgF16" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#081426" />
+      <stop offset="100%" stop-color="#13243d" />
+    </linearGradient>
+    <linearGradient id="jetF16" x1="0%" y1="0%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#93a3b8" />
+      <stop offset="100%" stop-color="#475569" />
+    </linearGradient>
+  </defs>
+  <!-- Background Card -->
+  <rect width="600" height="350" fill="url(#bgF16)" />
+  <!-- Grid lines -->
+  <path d="M0 50 H600 M0 100 H600 M0 150 H600 M0 200 H600 M0 250 H600 M0 300 H600" stroke="#1c2d46" stroke-width="1" stroke-dasharray="4 4" />
+  <path d="M100 0 V350 M200 0 V350 M300 0 V350 M400 0 V350 M500 0 V350" stroke="#1c2d46" stroke-width="1" stroke-dasharray="4 4" />
+
+  <!-- F-16 Fighting Falcon Silhouette (Top View) -->
+  <g transform="translate(300, 160) scale(1.05)">
+    <!-- Main Fuselage & Cropped Delta Wings -->
+    <path d="M 0,-115
+             L 6,-70
+             L 14,-25
+             L 80,18
+             L 80,32
+             L 15,22
+             L 26,76
+             L 10,79
+             L 5,68
+             L 0,73
+             L -5,68
+             L -10,79
+             L -26,76
+             L -15,22
+             L -80,32
+             L -80,18
+             L -14,-25
+             L -6,-70 Z"
+          fill="url(#jetF16)" stroke="#cbd5e1" stroke-width="2" />
+    <!-- Bubble Canopy -->
+    <ellipse cx="0" cy="-45" rx="5.5" ry="17" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5" />
+    <!-- Strake Leading Edge Lines -->
+    <line x1="0" y1="-70" x2="14" y2="-25" stroke="#334155" stroke-width="1.5" />
+    <line x1="0" y1="-70" x2="-14" y2="-25" stroke="#334155" stroke-width="1.5" />
+    <!-- Single Engine Afterburner Exhaust -->
+    <ellipse cx="0" cy="73" rx="6" ry="3.5" fill="#f97316" stroke="#ea580c" stroke-width="1.5" />
+    <!-- Wingtip Missile Rails -->
+    <line x1="80" y1="14" x2="80" y2="36" stroke="#94a3b8" stroke-width="2.5" />
+    <line x1="-80" y1="14" x2="-80" y2="36" stroke="#94a3b8" stroke-width="2.5" />
+  </g>
+
+  <!-- Aircraft Label Overlay -->
+  <rect x="20" y="285" width="230" height="42" rx="4" fill="#060d17" fill-opacity="0.85" stroke="#2c3e55" stroke-width="1" />
+  <text x="32" y="304" fill="#ffffff" font-family="Arial, sans-serif" font-size="14" font-weight="bold">F-16 FIGHTING FALCON</text>
+  <text x="32" y="320" fill="#94a3b8" font-family="Arial, sans-serif" font-size="11">Multirole Fighter Aircraft</text>
+</svg>

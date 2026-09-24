@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 350" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgVH92" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a1618" />
+      <stop offset="100%" stop-color="#12272a" />
+    </linearGradient>
+    <linearGradient id="bodyVH92" x1="0%" y1="0%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#1e3a2b" />
+      <stop offset="100%" stop-color="#14261d" />
+    </linearGradient>
+  </defs>
+  <!-- Background Card -->
+  <rect width="600" height="350" fill="url(#bgVH92)" />
+  <!-- Grid lines -->
+  <path d="M0 50 H600 M0 100 H600 M0 150 H600 M0 200 H600 M0 250 H600 M0 300 H600" stroke="#16383c" stroke-width="1" stroke-dasharray="4 4" />
+  <path d="M100 0 V350 M200 0 V350 M300 0 V350 M400 0 V350 M500 0 V350" stroke="#16383c" stroke-width="1" stroke-dasharray="4 4" />
+
+  <!-- VH-92 Patriot Executive Presidential Helicopter Silhouette (Top View) -->
+  <g transform="translate(300, 160) scale(0.95)">
+    <!-- Rotor Sweep Arc -->
+    <circle cx="0" cy="-20" r="120" fill="none" stroke="#254d52" stroke-width="1" stroke-dasharray="5 5" />
+
+    <!-- Fuselage Body -->
+    <path d="M 0,-105
+             C 12,-90 18,-60 18,-15
+             L 28,0
+             L 28,30
+             L 15,40
+             L 8,100
+             L 3,115
+             L 0,118
+             L -3,115
+             L -8,100
+             L -15,40
+             L -28,30
+             L -28,0
+             L -18,-15
+             C -18,-60 -12,-90 0,-105 Z"
+          fill="url(#bodyVH92)" stroke="#e2e8f0" stroke-width="2" />
+
+    <!-- Presidential White Top Deck ("White Top" Livery Accent) -->
+    <path d="M 0,-102
+             C 8,-90 10,-60 10,-20
+             L -10,-20
+             C -10,-60 -8,-90 0,-102 Z"
+          fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+
+    <!-- Gold Accent Line -->
+    <line x1="-12" y1="-20" x2="12" y2="-20" stroke="#eab308" stroke-width="2" />
+
+    <!-- Tail Stabilizer & Tail Rotor -->
+    <path d="M 3,95 L 38,100 L 38,110 L 3,108 Z" fill="#1e3a2b" stroke="#cbd5e1" stroke-width="1.5" />
+    <circle cx="38" cy="105" r="20" fill="none" stroke="#254d52" stroke-width="1" stroke-dasharray="3 3" />
+    <line x1="38" y1="85" x2="38" y2="125" stroke="#cbd5e1" stroke-width="1.8" />
+    <line x1="18" y1="105" x2="58" y2="105" stroke="#cbd5e1" stroke-width="1.8" />
+
+    <!-- Cockpit & Cabin Windows -->
+    <ellipse cx="0" cy="-88" rx="7" ry="5" fill="#022c22" stroke="#38bdf8" stroke-width="1" />
+
+    <!-- 4 Main Rotor Blades & Hub -->
+    <circle cx="0" cy="-20" r="8" fill="#0f172a" stroke="#e2e8f0" stroke-width="2" />
+    <!-- 4 Blades at 90-degree angles -->
+    <line x1="0" y1="-20" x2="0" y2="-140" stroke="#e2e8f0" stroke-width="3" stroke-linecap="round" />
+    <line x1="0" y1="-20" x2="120" y2="-20" stroke="#e2e8f0" stroke-width="3" stroke-linecap="round" />
+    <line x1="0" y1="-20" x2="0" y2="100" stroke="#e2e8f0" stroke-width="3" stroke-linecap="round" />
+    <line x1="0" y1="-20" x2="-120" y2="-20" stroke="#e2e8f0" stroke-width="3" stroke-linecap="round" />
+  </g>
+
+  <!-- Aircraft Label Overlay -->
+  <rect x="20" y="285" width="230" height="42" rx="4" fill="#060d17" fill-opacity="0.85" stroke="#2c3e55" stroke-width="1" />
+  <text x="32" y="304" fill="#ffffff" font-family="Arial, sans-serif" font-size="14" font-weight="bold">VH-92 PATRIOT</text>
+  <text x="32" y="320" fill="#94a3b8" font-family="Arial, sans-serif" font-size="11">Presidential Transport Helicopter</text>
+</svg>

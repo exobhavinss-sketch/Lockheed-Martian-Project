@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In | Lockheed Martin Aircraft</title>
+    <meta name="description" content="Sign in to access your member dashboard and explore Lockheed Martin aircraft collections.">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Header Section -->
+    <header class="site-header">
+        <div class="header-container">
+            <h1>Sign In</h1>
+            <p class="header-subtitle">Sign in to continue exploring the aircraft collection.</p>
+        </div>
+    </header>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="aircraft.html">Aircraft</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="contact.html">Contact</a></li>
+            <li><a href="signin.html" class="active">Sign In</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+
+        <!-- Sign In Section -->
+        <section class="signup-section">
+            <div class="signup-container">
+
+                <article class="signup-card">
+                    <h2>Account Sign In</h2>
+
+                    <!-- Informational Notice -->
+                    <div class="form-message">
+                        <p><strong>Sign In:</strong> Enter your registered email address and password to access your member dashboard.</p>
+                    </div>
+
+                    <!-- Sign In Form -->
+                    <form id="signinForm" action="#" method="post">
+
+                        <!-- Error / Success Message Container -->
+                        <div id="signinMessage"></div>
+
+                        <!-- Field 1: Email Address -->
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" name="email" placeholder="Enter your email address" required>
+                        </div>
+
+                        <!-- Field 2: Password -->
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                        </div>
+
+                        <!-- Field 3: Remember Me Checkbox -->
+                        <div class="form-checkbox-group">
+                            <input type="checkbox" id="remember" name="remember">
+                            <label for="remember">Remember Me</label>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn-submit">Sign In</button>
+
+                    </form>
+
+                    <!-- Link to Sign Up Page -->
+                    <div class="signin-link-box">
+                        <p>Don't have an account? <a href="signup.html">Sign Up</a></p>
+                    </div>
+
+                </article>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer Section -->
+    <footer class="site-footer">
+        <div class="footer-container">
+            <p class="footer-note">Student Educational Project</p>
+            <p class="footer-copy">&copy; 2026 Lockheed Martin Aircraft</p>
+            <nav class="footer-nav">
+                <a href="index.html">Home</a>
+                <a href="aircraft.html">Aircraft</a>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <a href="signin.html">Sign In</a>
+            </nav>
+        </div>
+    </footer>
+
+    <!-- Supabase CDN Client Library (v2) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Supabase Client Configuration -->
+    <script src="js/supabase.js"></script>
+
+    <!-- Main Project Script -->
+    <script src="js/script.js"></script>
+
+</body>
+</html>

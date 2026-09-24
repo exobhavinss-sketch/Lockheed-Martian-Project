@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 350" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgCH53K" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#08141d" />
+      <stop offset="100%" stop-color="#122530" />
+    </linearGradient>
+    <linearGradient id="bodyCH53K" x1="0%" y1="0%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#738a8c" />
+      <stop offset="100%" stop-color="#3d5154" />
+    </linearGradient>
+  </defs>
+  <!-- Background Card -->
+  <rect width="600" height="350" fill="url(#bgCH53K)" />
+  <!-- Grid lines -->
+  <path d="M0 50 H600 M0 100 H600 M0 150 H600 M0 200 H600 M0 250 H600 M0 300 H600" stroke="#16323d" stroke-width="1" stroke-dasharray="4 4" />
+  <path d="M100 0 V350 M200 0 V350 M300 0 V350 M400 0 V350 M500 0 V350" stroke="#16323d" stroke-width="1" stroke-dasharray="4 4" />
+
+  <!-- CH-53K King Stallion Silhouette (Top View) -->
+  <g transform="translate(300, 160) scale(0.95)">
+    <!-- Main Rotor Arc Path -->
+    <circle cx="0" cy="-25" r="125" fill="none" stroke="#2a5261" stroke-width="1" stroke-dasharray="6 6" />
+
+    <!-- Fuselage & Sponsons -->
+    <path d="M 0,-100
+             C 14,-85 16,-55 16,-20
+             L 34,-10
+             L 34,25
+             L 16,35
+             L 10,95
+             L 4,115
+             L 0,118
+             L -4,115
+             L -10,95
+             L -16,35
+             L -34,25
+             L -34,-10
+             L -16,-20
+             C -16,-55 -14,-85 0,-100 Z"
+          fill="url(#bodyCH53K)" stroke="#a5b9ba" stroke-width="2" />
+
+    <!-- Tail Pylon & Stabilizer -->
+    <path d="M 4,95 L 45,102 L 45,112 L 4,110 Z" fill="url(#bodyCH53K)" stroke="#a5b9ba" stroke-width="1.5" />
+    <!-- Tail Rotor Circle & Blades -->
+    <circle cx="45" cy="107" r="24" fill="none" stroke="#3b6978" stroke-width="1" stroke-dasharray="3 3" />
+    <line x1="45" y1="85" x2="45" y2="129" stroke="#cbd5e1" stroke-width="1.8" />
+    <line x1="23" y1="107" x2="67" y2="107" stroke="#cbd5e1" stroke-width="1.8" />
+
+    <!-- Cockpit Windows -->
+    <path d="M -8,-90 C -8,-98 8,-98 8,-90 L 9,-75 L -9,-75 Z" fill="#071318" stroke="#38bdf8" stroke-width="1" />
+
+    <!-- 7 Main Rotor Blades -->
+    <!-- Center Hub -->
+    <circle cx="0" cy="-25" r="9" fill="#1b2a30" stroke="#cbd5e1" stroke-width="2" />
+    <!-- Blade 1 -->
+    <line x1="0" y1="-25" x2="0" y2="-150" stroke="#cbd5e1" stroke-width="3" stroke-linecap="round" />
+    <!-- Blade 2 -->
+    <line x1="0" y1="-25" x2="98" y2="-102" stroke="#cbd5e1" stroke-width="3" stroke-linecap="round" />
+    <!-- Blade 3 -->
+    <line x1="0" y1="-25" x2="122" y2="7" stroke="#cbd5e1" stroke-width="3" stroke-linecap="round" />
+    <!-- Blade 4 -->
+    <line x1="0" y1="-25" x2="54" y2="87" stroke="#cbd5e1" stroke-width="3" stroke-linecap="round" />
+    <!-- Blade 5 -->
+    <line x1="0" y1="-25" x2="-54" y2="87" stroke="#cbd5e1" stroke-width="3" stroke-linecap="round" />
+    <!-- Blade 6 -->
+    <line x1="0" y1="-25" x2="-122" y2="7" stroke="#cbd5e1" stroke-width="3" stroke-linecap="round" />
+    <!-- Blade 7 -->
+    <line x1="0" y1="-25" x2="-98" y2="-102" stroke="#cbd5e1" stroke-width="3" stroke-linecap="round" />
+  </g>
+
+  <!-- Aircraft Label Overlay -->
+  <rect x="20" y="285" width="230" height="42" rx="4" fill="#060d17" fill-opacity="0.85" stroke="#2c3e55" stroke-width="1" />
+  <text x="32" y="304" fill="#ffffff" font-family="Arial, sans-serif" font-size="14" font-weight="bold">CH-53K KING STALLION</text>
+  <text x="32" y="320" fill="#94a3b8" font-family="Arial, sans-serif" font-size="11">Heavy-Lift Cargo Helicopter</text>
+</svg>

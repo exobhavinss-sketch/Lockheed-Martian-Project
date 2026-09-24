@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Lockheed Martin Aircraft</title>
+    <meta name="description" content="Access your member profile and aerospace preferences on the Lockheed Martin educational platform.">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Header Section -->
+    <header class="site-header">
+        <div class="header-container">
+            <h1>User Dashboard</h1>
+            <p class="header-subtitle">Welcome to your educational aerospace member area.</p>
+        </div>
+    </header>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="aircraft.html">Aircraft</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="contact.html">Contact</a></li>
+            <li><a href="dashboard.html" class="active">Dashboard</a></li>
+            <li><a href="#" id="navSignoutLink" style="color: #f87171;">Sign Out</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+
+        <!-- Dashboard Section -->
+        <section class="signup-section">
+            <div class="signup-container" style="max-width: 650px;">
+
+                <article class="signup-card">
+                    <h2>Account Overview</h2>
+
+                    <!-- Notification / Status Area -->
+                    <div id="dashboardMessage"></div>
+
+                    <!-- Authenticated User Content Container -->
+                    <div id="dashboardContent">
+                        <h3 style="font-size: 20px; color: #0a192f; margin-bottom: 8px;">
+                            Welcome, <span id="userWelcome">Explorer</span>!
+                        </h3>
+                        <p style="color: #64748b; font-size: 14px; margin-bottom: 18px;">
+                            You are signed in to the Lockheed Martin Aircraft educational platform.
+                        </p>
+
+                        <!-- Profile Information List -->
+                        <ul class="user-profile-list">
+                            <li class="user-profile-item">
+                                <span class="user-profile-label">Full Name:</span>
+                                <span class="user-profile-value" id="userFullName">Loading...</span>
+                            </li>
+                            <li class="user-profile-item">
+                                <span class="user-profile-label">Username:</span>
+                                <span class="user-profile-value" id="userUsername">Loading...</span>
+                            </li>
+                            <li class="user-profile-item">
+                                <span class="user-profile-label">Email Address:</span>
+                                <span class="user-profile-value" id="userEmail">Loading...</span>
+                            </li>
+                            <li class="user-profile-item">
+                                <span class="user-profile-label">Aircraft Interest:</span>
+                                <span class="user-profile-value" id="userInterest">Loading...</span>
+                            </li>
+                            <li class="user-profile-item">
+                                <span class="user-profile-label">Account Created:</span>
+                                <span class="user-profile-value" id="userMemberSince">Loading...</span>
+                            </li>
+                            <li class="user-profile-item">
+                                <span class="user-profile-label">Account Status:</span>
+                                <span class="status-badge status-current">Active Member</span>
+                            </li>
+                        </ul>
+
+                        <!-- Edit Profile Section -->
+                        <section class="edit-profile-section" style="margin-top: 30px; border-top: 2px solid #e2e8f0; padding-top: 24px;">
+                            <h3 style="font-size: 18px; color: #0a192f; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Edit Profile</h3>
+                            <p style="color: #64748b; font-size: 14px; margin-bottom: 18px;">Update your personal details and aerospace interests stored in the Supabase profiles database.</p>
+
+                            <!-- Edit Profile Status Message -->
+                            <div id="editProfileMessage"></div>
+
+                            <form id="editProfileForm" action="#" method="post">
+                                <div class="form-group">
+                                    <label for="editFullName">Full Name</label>
+                                    <input type="text" id="editFullName" name="fullName" placeholder="Enter your full name" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="editUsername">Username</label>
+                                    <input type="text" id="editUsername" name="username" placeholder="Enter your username" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="editAircraftInterest">Aircraft Interest</label>
+                                    <select id="editAircraftInterest" name="aircraftInterest" required>
+                                        <option value="" disabled>Select an aircraft category</option>
+                                        <option value="Fighter Aircraft">Fighter Aircraft</option>
+                                        <option value="Transport Aircraft">Transport Aircraft</option>
+                                        <option value="Spy & Reconnaissance Aircraft">Spy & Reconnaissance Aircraft</option>
+                                        <option value="Helicopters">Helicopters</option>
+                                        <option value="Special Mission Aircraft">Special Mission Aircraft</option>
+                                    </select>
+                                </div>
+
+                                <button type="submit" id="saveProfileBtn" class="btn-submit">Save Changes</button>
+                            </form>
+                        </section>
+
+                        <!-- Action Buttons -->
+                        <div style="margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+                            <button type="button" id="signoutBtn" class="btn-signout">Sign Out</button>
+                            <a href="aircraft.html" class="btn-card" style="display: block; text-align: center; margin-top: 14px; text-decoration: none;">Browse Aircraft Collection</a>
+                        </div>
+                    </div>
+
+                </article>
+
+            </div>
+        </section>
+
+        <!-- My Saved Aircraft Section -->
+        <section class="saved-aircraft-section" id="savedAircraftSection">
+            <div class="section-container">
+                <div class="saved-aircraft-header">
+                    <h2>MY SAVED AIRCRAFT</h2>
+                    <p class="saved-aircraft-subtitle">Your personal collection of bookmarked Lockheed Martin aircraft platforms.</p>
+                </div>
+
+                <!-- Status message area -->
+                <div id="favoritesMessage" class="favorites-message-box" style="display: none;"></div>
+
+                <!-- Saved Aircraft Grid -->
+                <div id="savedAircraftGrid" class="aircraft-grid saved-aircraft-grid">
+                    <!-- Populated dynamically via JavaScript -->
+                </div>
+
+                <!-- Empty State View -->
+                <div id="savedAircraftEmpty" class="saved-aircraft-empty" style="display: none;">
+                    <div class="notice-box" style="text-align: center; max-width: 600px; margin: 0 auto; padding: 36px 20px;">
+                        <p style="font-size: 16px; color: #475569; margin-bottom: 16px;">You have not saved any aircraft yet.</p>
+                        <a href="aircraft.html" class="btn-card" style="display: inline-block; text-decoration: none;">Explore Aircraft</a>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer Section -->
+    <footer class="site-footer">
+        <div class="footer-container">
+            <p class="footer-note">Student Educational Project</p>
+            <p class="footer-copy">&copy; 2026 Lockheed Martin Aircraft</p>
+            <nav class="footer-nav">
+                <a href="index.html">Home</a>
+                <a href="aircraft.html">Aircraft</a>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <a href="dashboard.html">Dashboard</a>
+            </nav>
+        </div>
+    </footer>
+
+    <!-- Supabase CDN Client Library (v2) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Supabase Client Configuration -->
+    <script src="js/supabase.js"></script>
+
+    <!-- Main Project Script -->
+    <script src="js/script.js"></script>
+
+</body>
+</html>

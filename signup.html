@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up | Lockheed Martin Aircraft</title>
+    <meta name="description" content="Create your student member account to explore aircraft collections and manage your profile.">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Header Section -->
+    <header class="site-header">
+        <div class="header-container">
+            <h1>Create Your Account</h1>
+            <p class="header-subtitle">Sign up to explore the aircraft collection and continue your learning journey.</p>
+        </div>
+    </header>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="aircraft.html">Aircraft</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="contact.html">Contact</a></li>
+            <li><a href="signin.html">Sign In</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+
+        <!-- Sign Up Section -->
+        <section class="signup-section">
+            <div class="signup-container">
+
+                <article class="signup-card">
+                    <h2>Registration Form</h2>
+
+                    <!-- Informational Notice -->
+                    <div class="form-message">
+                        <p><strong>Create Your Account:</strong> Register with your email and password to access the member dashboard and save aircraft to your collection.</p>
+                    </div>
+
+                    <!-- Sign Up Form -->
+                    <form id="signupForm" action="#" method="post">
+
+                        <!-- Error / Success Message Container -->
+                        <div id="signupMessage"></div>
+
+                        <!-- Field 1: Full Name -->
+                        <div class="form-group">
+                            <label for="fullName">Full Name</label>
+                            <input type="text" id="fullName" name="name" placeholder="Enter your full name" required>
+                        </div>
+
+                        <!-- Field 2: Email Address -->
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" name="email" placeholder="Enter your email address" required>
+                        </div>
+
+                        <!-- Field 3: Username -->
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input type="text" id="username" name="username" placeholder="Choose a username" required>
+                        </div>
+
+                        <!-- Field 4: Password -->
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" name="password" placeholder="Create a password" required>
+                        </div>
+
+                        <!-- Field 5: Confirm Password -->
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm Password</label>
+                            <input type="password" id="confirmPassword" name="confirm-password" placeholder="Confirm your password" required>
+                        </div>
+
+                        <!-- Field 6: Aircraft Interest Dropdown -->
+                        <div class="form-group">
+                            <label for="aircraftInterest">Aircraft Interest</label>
+                            <select id="aircraftInterest" name="interest" required>
+                                <option value="" disabled selected>Select an aircraft category</option>
+                                <option value="Fighter Aircraft">Fighter Aircraft</option>
+                                <option value="Transport Aircraft">Transport Aircraft</option>
+                                <option value="Spy & Reconnaissance Aircraft">Spy & Reconnaissance Aircraft</option>
+                                <option value="Helicopters">Helicopters</option>
+                                <option value="Special Mission Aircraft">Special Mission Aircraft</option>
+                            </select>
+                        </div>
+
+                        <!-- Field 7: Terms and Conditions Checkbox -->
+                        <div class="form-checkbox-group">
+                            <input type="checkbox" id="terms" name="terms" required>
+                            <label for="terms">I agree to the terms and conditions.</label>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn-submit">Create Account</button>
+
+                    </form>
+
+                    <!-- Sign In Link -->
+                    <div class="signin-link-box">
+                        <p>Already have an account? <a href="signin.html">Sign In</a></p>
+                    </div>
+
+                </article>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer Section -->
+    <footer class="site-footer">
+        <div class="footer-container">
+            <p class="footer-note">Student Educational Project</p>
+            <p class="footer-copy">&copy; 2026 Lockheed Martin Aircraft</p>
+            <nav class="footer-nav">
+                <a href="index.html">Home</a>
+                <a href="aircraft.html">Aircraft</a>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <a href="signin.html">Sign In</a>
+            </nav>
+        </div>
+    </footer>
+
+    <!-- Supabase CDN Client Library (v2) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Supabase Client Configuration -->
+    <script src="js/supabase.js"></script>
+
+    <!-- Main Project Script -->
+    <script src="js/script.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 350" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgC130" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a192f" />
+      <stop offset="100%" stop-color="#172a45" />
+    </linearGradient>
+    <linearGradient id="planeC130" x1="0%" y1="0%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#93a8ac" />
+      <stop offset="100%" stop-color="#4c5c68" />
+    </linearGradient>
+  </defs>
+  <!-- Background Card -->
+  <rect width="600" height="350" fill="url(#bgC130)" />
+  <!-- Grid lines -->
+  <path d="M0 50 H600 M0 100 H600 M0 150 H600 M0 200 H600 M0 250 H600 M0 300 H600" stroke="#1b3a4b" stroke-width="1" stroke-dasharray="4 4" />
+  <path d="M100 0 V350 M200 0 V350 M300 0 V350 M400 0 V350 M500 0 V350" stroke="#1b3a4b" stroke-width="1" stroke-dasharray="4 4" />
+
+  <!-- C-130 Hercules Silhouette / Graphic (Top View with 4 Turboprop Engines) -->
+  <g transform="translate(300, 160) scale(0.95)">
+    <!-- Main Fuselage -->
+    <path d="M 0,-120 
+             C 18,-90 18,-30 18,70 
+             L 12,105 
+             L 0,115 
+             L -12,105 
+             L -18,70 
+             C -18,-30 -18,-90 0,-120 Z" 
+          fill="url(#planeC130)" stroke="#ccd6f6" stroke-width="2" />
+    <!-- Straight High Wings -->
+    <path d="M -18,-15 
+             L -175,-5 
+             L -175,15 
+             L -18,15 
+             L 18,15 
+             L 175,15 
+             L 175,-5 
+             L 18,-15 Z" 
+          fill="url(#planeC130)" stroke="#ccd6f6" stroke-width="2" />
+    <!-- Tailplane / Horizontal Stabilizer -->
+    <path d="M -10,80 
+             L -70,88 
+             L -70,98 
+             L -10,96 
+             L 10,96 
+             L 70,98 
+             L 70,88 
+             L 10,80 Z" 
+          fill="url(#planeC130)" stroke="#ccd6f6" stroke-width="1.5" />
+    <!-- Cockpit Windows -->
+    <ellipse cx="0" cy="-95" rx="10" ry="6" fill="#020c1b" stroke="#64ffda" stroke-width="1" />
+    <!-- 4 Turboprop Engines -->
+    <!-- Left Inner & Outer -->
+    <rect x="-70" y="-22" width="12" height="32" rx="4" fill="#334155" stroke="#94a3b8" stroke-width="1" />
+    <line x1="-74" y1="-22" x2="-54" y2="-22" stroke="#e2e8f0" stroke-width="2" />
+    <rect x="-130" y="-20" width="12" height="30" rx="4" fill="#334155" stroke="#94a3b8" stroke-width="1" />
+    <line x1="-134" y1="-20" x2="-114" y2="-20" stroke="#e2e8f0" stroke-width="2" />
+    <!-- Right Inner & Outer -->
+    <rect x="58" y="-22" width="12" height="32" rx="4" fill="#334155" stroke="#94a3b8" stroke-width="1" />
+    <line x1="54" y1="-22" x2="74" y2="-22" stroke="#e2e8f0" stroke-width="2" />
+    <rect x="118" y="-20" width="12" height="30" rx="4" fill="#334155" stroke="#94a3b8" stroke-width="1" />
+    <line x1="114" y1="-20" x2="134" y2="-20" stroke="#e2e8f0" stroke-width="2" />
+  </g>
+
+  <!-- Aircraft Label Overlay -->
+  <rect x="20" y="285" width="220" height="42" rx="4" fill="#060d17" fill-opacity="0.85" stroke="#2c3e55" stroke-width="1" />
+  <text x="32" y="304" fill="#ffffff" font-family="Arial, sans-serif" font-size="14" font-weight="bold">C-130 HERCULES</text>
+  <text x="32" y="320" fill="#94a3b8" font-family="Arial, sans-serif" font-size="11">Tactical Military Airlifter</text>
+</svg>

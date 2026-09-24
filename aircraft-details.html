@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aircraft Details | Lockheed Martin Aircraft</title>
+    <meta name="description" content="Detailed specifications, mission roles, dimensions, and operational capabilities of selected Lockheed Martin aircraft.">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Header Section -->
+    <header class="site-header">
+        <div class="header-container">
+            <h1>AIRCRAFT DETAILS</h1>
+            <p class="header-subtitle">Comprehensive specifications and operational profiles.</p>
+        </div>
+    </header>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="aircraft.html" class="active">Aircraft</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="contact.html">Contact</a></li>
+            <li><a href="signin.html">Sign In</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+
+        <section class="aircraft-details-section">
+            <div class="section-container">
+
+                <!-- Dynamic Aircraft Details Card -->
+                <div id="aircraftDetailsContainer">
+                    <article class="aircraft-details-grid">
+
+                        <!-- Left Column: Aircraft Image -->
+                        <div class="aircraft-details-image-col">
+                            <figure class="aircraft-details-figure">
+                                <img id="aircraftImage" src="" alt="Aircraft Photograph">
+                                <figcaption id="aircraftCaption">Aircraft Caption</figcaption>
+                            </figure>
+                        </div>
+
+                        <!-- Right Column: Aircraft Information & Specifications -->
+                        <div class="aircraft-details-info-col">
+                            <div class="aircraft-header-row">
+                                <h1 id="aircraftName">Loading Aircraft...</h1>
+                                <span id="aircraftSpecialLabel" class="special-label" style="display: none;"></span>
+                            </div>
+
+                            <p id="aircraftCategory" class="aircraft-detail-item"><strong>Category:</strong> Loading...</p>
+                            <p id="aircraftRole" class="aircraft-detail-item"><strong>Role:</strong> Loading...</p>
+                            <p id="aircraftStatus" class="aircraft-detail-item"><strong>Status:</strong> Loading...</p>
+
+                            <!-- Save / Favorite Action Row -->
+                            <div class="aircraft-actions-row">
+                                <button type="button" id="saveAircraftButton" class="btn-save-aircraft">☆ Save Aircraft</button>
+                                <div id="saveAircraftMessage" class="save-aircraft-message" style="display: none;"></div>
+                            </div>
+
+                            <!-- Educational Description Box -->
+                            <div class="aircraft-detail-desc-box">
+                                <h3>Aircraft Overview</h3>
+                                <p id="aircraftDescription">Loading aircraft description...</p>
+                            </div>
+
+                            <!-- Specifications Table -->
+                            <div class="aircraft-specs-box">
+                                <h3>Platform Specifications</h3>
+                                <table id="aircraftSpecsTable" class="aircraft-table specs-table">
+                                    <tbody id="aircraftSpecsBody">
+                                        <!-- Dynamically generated with JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Navigation Back Buttons -->
+                            <div class="aircraft-navigation-actions">
+                                <a href="aircraft.html" class="btn-card">Back to Aircraft</a>
+                                <a href="index.html" class="btn-hero-secondary">Back to Home</a>
+                            </div>
+
+                        </div>
+
+                    </article>
+                </div>
+
+                <!-- Fallback Container (Missing / Invalid Aircraft ID) -->
+                <div id="aircraftErrorContainer" style="display: none;">
+                    <div class="notice-box error-notice-box">
+                        <h2 id="aircraftErrorMessage">Aircraft Not Selected</h2>
+                        <p id="aircraftErrorText">Please select an aircraft from our collection to view its full specifications and details.</p>
+                        <a id="aircraftErrorBtn" href="aircraft.html" class="btn-hero" style="margin-top: 18px; display: inline-block;">View Aircraft Collection</a>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer Section -->
+    <footer class="site-footer">
+        <div class="footer-container">
+            <p class="footer-note">Student Educational Project</p>
+            <p class="footer-copy">&copy; 2026 Lockheed Martin Aircraft</p>
+            <nav class="footer-nav">
+                <a href="index.html">Home</a>
+                <a href="aircraft.html">Aircraft</a>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <a href="signin.html">Sign In</a>
+            </nav>
+        </div>
+    </footer>
+
+    <!-- Supabase CDN Client Library (v2) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Supabase Client Configuration -->
+    <script src="js/supabase.js"></script>
+
+    <!-- JavaScript File -->
+    <script src="js/script.js"></script>
+
+</body>
+</html>

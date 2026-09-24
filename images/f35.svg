@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 350" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgF35" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b1728" />
+      <stop offset="100%" stop-color="#1b2a4a" />
+    </linearGradient>
+    <linearGradient id="jetF35" x1="0%" y1="0%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#8fa3bf" />
+      <stop offset="100%" stop-color="#566981" />
+    </linearGradient>
+  </defs>
+  <!-- Background Card -->
+  <rect width="600" height="350" fill="url(#bgF35)" />
+  <!-- Grid lines for aerospace blueprint feel -->
+  <path d="M0 50 H600 M0 100 H600 M0 150 H600 M0 200 H600 M0 250 H600 M0 300 H600" stroke="#1f3352" stroke-width="1" stroke-dasharray="4 4" />
+  <path d="M100 0 V350 M200 0 V350 M300 0 V350 M400 0 V350 M500 0 V350" stroke="#1f3352" stroke-width="1" stroke-dasharray="4 4" />
+  
+  <!-- F-35 Silhouette / Graphic (Top View) -->
+  <g transform="translate(300, 160) scale(0.95)">
+    <!-- Main Fuselage & Wings -->
+    <path d="M 0,-115 
+             C 7,-95 12,-60 16,-20 
+             L 95,20 
+             L 85,45 
+             L 22,25 
+             L 32,80 
+             L 12,85 
+             L 6,65 
+             L 0,72 
+             L -6,65 
+             L -12,85 
+             L -32,80 
+             L -22,25 
+             L -85,45 
+             L -95,20 
+             L -16,-20 
+             C -12,-60 -7,-95 0,-115 Z" 
+          fill="url(#jetF35)" stroke="#c5d3e8" stroke-width="2" />
+    <!-- Cockpit Canopy -->
+    <ellipse cx="0" cy="-45" rx="5" ry="18" fill="#1b263b" stroke="#72efdd" stroke-width="1.5" />
+    <!-- Wing Detail Lines -->
+    <line x1="-16" y1="-20" x2="-80" y2="28" stroke="#415a77" stroke-width="1.5" />
+    <line x1="16" y1="-20" x2="80" y2="28" stroke="#415a77" stroke-width="1.5" />
+    <!-- Jet Exhaust Center -->
+    <circle cx="0" cy="72" r="4.5" fill="#e63946" />
+  </g>
+
+  <!-- Aircraft Label Overlay -->
+  <rect x="20" y="285" width="220" height="42" rx="4" fill="#060d17" fill-opacity="0.85" stroke="#2c3e55" stroke-width="1" />
+  <text x="32" y="304" fill="#ffffff" font-family="Arial, sans-serif" font-size="14" font-weight="bold">F-35 LIGHTNING II</text>
+  <text x="32" y="320" fill="#94a3b8" font-family="Arial, sans-serif" font-size="11">5th Gen Stealth Multirole Fighter</text>
+</svg>
