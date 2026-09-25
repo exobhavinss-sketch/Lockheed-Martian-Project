@@ -6,6 +6,8 @@
     <title>Sign In | Lockheed Martin Aircraft</title>
     <meta name="description" content="Sign in to access your member dashboard and explore Lockheed Martin aircraft collections.">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link rel="apple-touch-icon" href="images/favicon.png">
 </head>
 <body>
 
@@ -19,13 +21,18 @@
 
     <!-- Navigation Bar -->
     <nav class="navbar">
-        <ul class="nav-links">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="aircraft.html">Aircraft</a></li>
-            <li><a href="about.html">About</a></li>
-            <li><a href="contact.html">Contact</a></li>
-            <li><a href="signin.html" class="active">Sign In</a></li>
-        </ul>
+        <div class="navbar-container">
+            <a href="index.html" class="site-logo">
+                <img src="images/logo.png" alt="Lockheed Martin Aircraft Educational Website">
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="aircraft.html">Aircraft</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li><a href="signin.html" class="active">Sign In</a></li>
+            </ul>
+        </div>
     </nav>
 
     <!-- Main Content -->
@@ -52,13 +59,13 @@
                         <!-- Field 1: Email Address -->
                         <div class="form-group">
                             <label for="email">Email Address</label>
-                            <input type="email" id="email" name="email" placeholder="Enter your email address" required>
+                            <input type="email" id="email" name="email" placeholder="Enter your email address" autocomplete="email" required>
                         </div>
 
                         <!-- Field 2: Password -->
                         <div class="form-group">
                             <label for="password">Password</label>
-                            <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                            <input type="password" id="password" name="password" placeholder="Enter your password" autocomplete="current-password" required>
                         </div>
 
                         <!-- Field 3: Remember Me Checkbox -->
@@ -88,7 +95,14 @@
     <footer class="site-footer">
         <div class="footer-container">
             <p class="footer-note">Student Educational Project</p>
-            <p class="footer-copy">&copy; 2026 Lockheed Martin Aircraft</p>
+            <p class="footer-copy">&copy; 2026 Lockheed Martin Aircraft &mdash; Developed by Bhavin Shankur</p>
+            <p class="footer-disclaimer">This website is a student educational project created for academic purposes as part of a college Full Stack Development course. It is not affiliated with, sponsored by, or officially connected to Lockheed Martin Corporation.</p>
+            <div class="footer-social-links">
+                <a href="https://www.linkedin.com/in/bhavin-shankur-8421a0371" target="_blank" rel="noopener noreferrer">&#x1F517; LinkedIn</a>
+                <a href="https://github.com/exobhavinss-sketch" target="_blank" rel="noopener noreferrer">&#x1F4BB; GitHub</a>
+                <a href="https://www.instagram.com/bhavinnh/" target="_blank" rel="noopener noreferrer">&#x1F4F7; Instagram</a>
+                <a href="https://x.com/BhavinShankur" target="_blank" rel="noopener noreferrer">&#x1F426; X / Twitter</a>
+            </div>
             <nav class="footer-nav">
                 <a href="index.html">Home</a>
                 <a href="aircraft.html">Aircraft</a>

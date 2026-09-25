@@ -6,6 +6,8 @@
     <title>About the Project | Lockheed Martin Aircraft</title>
     <meta name="description" content="Learn about the educational objectives, curriculum, and technology stack behind this Lockheed Martin student project.">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link rel="apple-touch-icon" href="images/favicon.png">
 </head>
 <body>
 
@@ -19,13 +21,18 @@
 
     <!-- Navigation Bar -->
     <nav class="navbar">
-        <ul class="nav-links">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="aircraft.html">Aircraft</a></li>
-            <li><a href="about.html" class="active">About</a></li>
-            <li><a href="contact.html">Contact</a></li>
-            <li><a href="signin.html">Sign In</a></li>
-        </ul>
+        <div class="navbar-container">
+            <a href="index.html" class="site-logo">
+                <img src="images/logo.png" alt="Lockheed Martin Aircraft Educational Website">
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="aircraft.html">Aircraft</a></li>
+                <li><a href="about.html" class="active">About</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li><a href="signin.html">Sign In</a></li>
+            </ul>
+        </div>
     </nav>
 
     <!-- Main Content -->
@@ -71,13 +78,13 @@
                     </article>
                     <article class="tech-card">
                         <h3>JavaScript</h3>
-                        <span class="status-badge status-planned">Planned Stage</span>
-                        <p>Planned for a later stage to add interaction and dynamic behavior.</p>
+                        <span class="status-badge status-current">Current Stage</span>
+                        <p>Used to add interaction, dynamic behavior, and form validation.</p>
                     </article>
                     <article class="tech-card">
                         <h3>Supabase</h3>
-                        <span class="status-badge status-planned">Planned Stage</span>
-                        <p>Planned for a later stage for authentication and database functionality.</p>
+                        <span class="status-badge status-current">Current Stage</span>
+                        <p>Used for user authentication, database storage, and row-level security.</p>
                     </article>
                 </div>
             </div>
@@ -148,7 +155,24 @@
             </div>
         </section>
 
-        <!-- Section 7: Educational Notice -->
+        <!-- Section 7: Developer Credit -->
+        <section class="about-page-section bg-alt" id="developer-credit">
+            <div class="section-container">
+                <h2>Developed By</h2>
+                <div class="developer-credit-card">
+                    <p class="developer-intro"><strong>Bhavin Shankur</strong></p>
+                    <p class="developer-desc">This project was designed and developed by Bhavin Shankur as part of a Full Stack Development course at MIT VishwaPrayag University. It demonstrates HTML, CSS, JavaScript, and Supabase integration.</p>
+                    <div class="developer-links">
+                        <a href="https://www.linkedin.com/in/bhavin-shankur-8421a0371" target="_blank" rel="noopener noreferrer" class="btn-card">LinkedIn</a>
+                        <a href="https://github.com/exobhavinss-sketch" target="_blank" rel="noopener noreferrer" class="btn-card">GitHub</a>
+                        <a href="https://www.instagram.com/bhavinnh/" target="_blank" rel="noopener noreferrer" class="btn-hero-secondary">Instagram</a>
+                        <a href="https://x.com/BhavinShankur" target="_blank" rel="noopener noreferrer" class="btn-hero-secondary">X / Twitter</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 8: Educational Notice -->
         <section class="educational-notice-section" id="educational-notice">
             <div class="section-container">
                 <div class="notice-box">
@@ -164,7 +188,14 @@
     <footer class="site-footer">
         <div class="footer-container">
             <p class="footer-note">Student Educational Project</p>
-            <p class="footer-copy">&copy; 2026 Lockheed Martin Aircraft</p>
+            <p class="footer-copy">&copy; 2026 Lockheed Martin Aircraft &mdash; Developed by Bhavin Shankur</p>
+            <p class="footer-disclaimer">This website is a student educational project created for academic purposes as part of a college Full Stack Development course. It is not affiliated with, sponsored by, or officially connected to Lockheed Martin Corporation.</p>
+            <div class="footer-social-links">
+                <a href="https://www.linkedin.com/in/bhavin-shankur-8421a0371" target="_blank" rel="noopener noreferrer">&#x1F517; LinkedIn</a>
+                <a href="https://github.com/exobhavinss-sketch" target="_blank" rel="noopener noreferrer">&#x1F4BB; GitHub</a>
+                <a href="https://www.instagram.com/bhavinnh/" target="_blank" rel="noopener noreferrer">&#x1F4F7; Instagram</a>
+                <a href="https://x.com/BhavinShankur" target="_blank" rel="noopener noreferrer">&#x1F426; X / Twitter</a>
+            </div>
             <nav class="footer-nav">
                 <a href="index.html">Home</a>
                 <a href="aircraft.html">Aircraft</a>

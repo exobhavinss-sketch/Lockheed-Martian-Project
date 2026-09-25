@@ -6,6 +6,8 @@
     <title>Dashboard | Lockheed Martin Aircraft</title>
     <meta name="description" content="Access your member profile and aerospace preferences on the Lockheed Martin educational platform.">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link rel="apple-touch-icon" href="images/favicon.png">
 </head>
 <body>
 
@@ -19,14 +21,19 @@
 
     <!-- Navigation Bar -->
     <nav class="navbar">
-        <ul class="nav-links">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="aircraft.html">Aircraft</a></li>
-            <li><a href="about.html">About</a></li>
-            <li><a href="contact.html">Contact</a></li>
-            <li><a href="dashboard.html" class="active">Dashboard</a></li>
-            <li><a href="#" id="navSignoutLink" style="color: #f87171;">Sign Out</a></li>
-        </ul>
+        <div class="navbar-container">
+            <a href="index.html" class="site-logo">
+                <img src="images/logo.png" alt="Lockheed Martin Aircraft Educational Website">
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="aircraft.html">Aircraft</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li><a href="dashboard.html" class="active">Dashboard</a></li>
+                <li><a href="#" id="navSignoutLink" style="color: #f87171;">Sign Out</a></li>
+            </ul>
+        </div>
     </nav>
 
     <!-- Main Content -->
@@ -51,67 +58,88 @@
                             You are signed in to the Lockheed Martin Aircraft educational platform.
                         </p>
 
-                        <!-- Profile Information List -->
-                        <ul class="user-profile-list">
-                            <li class="user-profile-item">
-                                <span class="user-profile-label">Full Name:</span>
-                                <span class="user-profile-value" id="userFullName">Loading...</span>
-                            </li>
-                            <li class="user-profile-item">
-                                <span class="user-profile-label">Username:</span>
-                                <span class="user-profile-value" id="userUsername">Loading...</span>
-                            </li>
-                            <li class="user-profile-item">
-                                <span class="user-profile-label">Email Address:</span>
-                                <span class="user-profile-value" id="userEmail">Loading...</span>
-                            </li>
-                            <li class="user-profile-item">
-                                <span class="user-profile-label">Aircraft Interest:</span>
-                                <span class="user-profile-value" id="userInterest">Loading...</span>
-                            </li>
-                            <li class="user-profile-item">
-                                <span class="user-profile-label">Account Created:</span>
-                                <span class="user-profile-value" id="userMemberSince">Loading...</span>
-                            </li>
-                            <li class="user-profile-item">
-                                <span class="user-profile-label">Account Status:</span>
-                                <span class="status-badge status-current">Active Member</span>
-                            </li>
-                        </ul>
+                        <!-- Profile Information Section (STEPS 3, 4, 5) -->
+                        <section class="profile-info-section" id="profileInfoSection" aria-labelledby="profileSectionHeading" style="margin-top: 15px;">
+                            <div class="profile-section-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 16px;">
+                                <h3 id="profileSectionHeading" style="font-size: 18px; color: #0a192f; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Profile Information</h3>
+                                <button type="button" id="editProfileBtn" class="btn-edit-profile" aria-label="Edit Profile">Edit Profile</button>
+                            </div>
 
-                        <!-- Edit Profile Section -->
-                        <section class="edit-profile-section" style="margin-top: 30px; border-top: 2px solid #e2e8f0; padding-top: 24px;">
-                            <h3 style="font-size: 18px; color: #0a192f; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Edit Profile</h3>
-                            <p style="color: #64748b; font-size: 14px; margin-bottom: 18px;">Update your personal details and aerospace interests stored in the Supabase profiles database.</p>
+                            <!-- Read-Only Profile View (Initially Visible) -->
+                            <div id="profileReadOnlyView" class="profile-view-box">
+                                <ul class="user-profile-list" style="margin-top: 0;">
+                                    <li class="user-profile-item">
+                                        <span class="user-profile-label">Email Address:</span>
+                                        <span class="user-profile-value" id="userEmail">Loading...</span>
+                                    </li>
+                                    <li class="user-profile-item">
+                                        <span class="user-profile-label">Full Name:</span>
+                                        <span class="user-profile-value" id="userFullName">Loading...</span>
+                                    </li>
+                                    <li class="user-profile-item">
+                                        <span class="user-profile-label">Username:</span>
+                                        <span class="user-profile-value" id="userUsername">Loading...</span>
+                                    </li>
+                                    <li class="user-profile-item">
+                                        <span class="user-profile-label">Aircraft Interest:</span>
+                                        <span class="user-profile-value" id="userInterest">Loading...</span>
+                                    </li>
+                                    <li class="user-profile-item">
+                                        <span class="user-profile-label">Account Created:</span>
+                                        <span class="user-profile-value" id="userMemberSince">Loading...</span>
+                                    </li>
+                                    <li class="user-profile-item">
+                                        <span class="user-profile-label">Account Status:</span>
+                                        <span class="status-badge status-current">Active Member</span>
+                                    </li>
+                                </ul>
+                            </div>
 
-                            <!-- Edit Profile Status Message -->
-                            <div id="editProfileMessage"></div>
+                            <!-- Editable Profile Form View (Initially Hidden, shown when Edit Profile is clicked) -->
+                            <div id="profileEditView" class="profile-edit-box" style="display: none;">
+                                <p style="color: #64748b; font-size: 14px; margin-bottom: 18px;">
+                                    Update your personal details and aerospace interests stored in your profile.
+                                </p>
 
-                            <form id="editProfileForm" action="#" method="post">
-                                <div class="form-group">
-                                    <label for="editFullName">Full Name</label>
-                                    <input type="text" id="editFullName" name="fullName" placeholder="Enter your full name" required>
-                                </div>
+                                <!-- Edit Profile Status Message -->
+                                <div id="editProfileMessage" role="status" aria-live="polite"></div>
 
-                                <div class="form-group">
-                                    <label for="editUsername">Username</label>
-                                    <input type="text" id="editUsername" name="username" placeholder="Enter your username" required>
-                                </div>
+                                <form id="editProfileForm" action="#" method="post" novalidate>
+                                    <div class="form-group">
+                                        <label for="editEmail">Email Address (Read-only)</label>
+                                        <input type="email" id="editEmail" name="email" readonly disabled class="form-input-readonly" aria-describedby="emailReadonlyHelp" style="background-color: #f1f5f9; cursor: not-allowed; color: #64748b;">
+                                        <small id="emailReadonlyHelp" style="display: block; margin-top: 5px; font-size: 12px; color: #64748b;">Email is tied to your login credentials and cannot be edited here.</small>
+                                    </div>
 
-                                <div class="form-group">
-                                    <label for="editAircraftInterest">Aircraft Interest</label>
-                                    <select id="editAircraftInterest" name="aircraftInterest" required>
-                                        <option value="" disabled>Select an aircraft category</option>
-                                        <option value="Fighter Aircraft">Fighter Aircraft</option>
-                                        <option value="Transport Aircraft">Transport Aircraft</option>
-                                        <option value="Spy & Reconnaissance Aircraft">Spy & Reconnaissance Aircraft</option>
-                                        <option value="Helicopters">Helicopters</option>
-                                        <option value="Special Mission Aircraft">Special Mission Aircraft</option>
-                                    </select>
-                                </div>
+                                    <div class="form-group">
+                                        <label for="editFullName">Full Name <span style="color: #dc2626;">*</span></label>
+                                        <input type="text" id="editFullName" name="fullName" placeholder="Enter your full name" required minlength="2">
+                                    </div>
 
-                                <button type="submit" id="saveProfileBtn" class="btn-submit">Save Changes</button>
-                            </form>
+                                    <div class="form-group">
+                                        <label for="editUsername">Username <span style="color: #dc2626;">*</span></label>
+                                        <input type="text" id="editUsername" name="username" placeholder="Enter your username" required minlength="3">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="editAircraftInterest">Aircraft Interest <span style="color: #dc2626;">*</span></label>
+                                        <select id="editAircraftInterest" name="aircraftInterest" required>
+                                            <option value="" disabled>Select an aircraft category</option>
+                                            <option value="Fighter Aircraft">Fighter Aircraft</option>
+                                            <option value="Transport Aircraft">Transport Aircraft</option>
+                                            <option value="Spy &amp; Reconnaissance Aircraft">Spy &amp; Reconnaissance Aircraft</option>
+                                            <option value="Helicopters">Helicopters</option>
+                                            <option value="Special Mission Aircraft">Special Mission Aircraft</option>
+                                            <option value="General Interest">General Interest</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="profile-btn-group" style="display: flex; gap: 12px; margin-top: 20px;">
+                                        <button type="submit" id="saveProfileBtn" class="btn-submit" style="flex: 1;">Save Changes</button>
+                                        <button type="button" id="cancelEditProfileBtn" class="btn-secondary" style="flex: 1;">Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
                         </section>
 
                         <!-- Action Buttons -->
@@ -126,12 +154,12 @@
             </div>
         </section>
 
-        <!-- My Saved Aircraft Section -->
+        <!-- My Favorite Aircraft Section (STEP 19) -->
         <section class="saved-aircraft-section" id="savedAircraftSection">
             <div class="section-container">
                 <div class="saved-aircraft-header">
-                    <h2>MY SAVED AIRCRAFT</h2>
-                    <p class="saved-aircraft-subtitle">Your personal collection of bookmarked Lockheed Martin aircraft platforms.</p>
+                    <h2>My Favorite Aircraft</h2>
+                    <p class="saved-aircraft-subtitle">Your saved Lockheed Martin aircraft platforms.</p>
                 </div>
 
                 <!-- Status message area -->
@@ -145,7 +173,7 @@
                 <!-- Empty State View -->
                 <div id="savedAircraftEmpty" class="saved-aircraft-empty" style="display: none;">
                     <div class="notice-box" style="text-align: center; max-width: 600px; margin: 0 auto; padding: 36px 20px;">
-                        <p style="font-size: 16px; color: #475569; margin-bottom: 16px;">You have not saved any aircraft yet.</p>
+                        <p style="font-size: 16px; color: #475569; margin-bottom: 16px;">You haven't saved any aircraft yet.</p>
                         <a href="aircraft.html" class="btn-card" style="display: inline-block; text-decoration: none;">Explore Aircraft</a>
                     </div>
                 </div>
@@ -159,7 +187,14 @@
     <footer class="site-footer">
         <div class="footer-container">
             <p class="footer-note">Student Educational Project</p>
-            <p class="footer-copy">&copy; 2026 Lockheed Martin Aircraft</p>
+            <p class="footer-copy">&copy; 2026 Lockheed Martin Aircraft &mdash; Developed by Bhavin Shankur</p>
+            <p class="footer-disclaimer">This website is a student educational project created for academic purposes as part of a college Full Stack Development course. It is not affiliated with, sponsored by, or officially connected to Lockheed Martin Corporation.</p>
+            <div class="footer-social-links">
+                <a href="https://www.linkedin.com/in/bhavin-shankur-8421a0371" target="_blank" rel="noopener noreferrer">&#x1F517; LinkedIn</a>
+                <a href="https://github.com/exobhavinss-sketch" target="_blank" rel="noopener noreferrer">&#x1F4BB; GitHub</a>
+                <a href="https://www.instagram.com/bhavinnh/" target="_blank" rel="noopener noreferrer">&#x1F4F7; Instagram</a>
+                <a href="https://x.com/BhavinShankur" target="_blank" rel="noopener noreferrer">&#x1F426; X / Twitter</a>
+            </div>
             <nav class="footer-nav">
                 <a href="index.html">Home</a>
                 <a href="aircraft.html">Aircraft</a>

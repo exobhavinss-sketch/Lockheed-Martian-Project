@@ -6,6 +6,8 @@
     <title>Aircraft Collection | Lockheed Martin Aircraft</title>
     <meta name="description" content="Browse our comprehensive collection of Lockheed Martin aircraft, featuring fighters, transports, reconnaissance, and helicopters.">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link rel="apple-touch-icon" href="images/favicon.png">
 </head>
 <body>
 
@@ -19,13 +21,18 @@
 
     <!-- Navigation Bar -->
     <nav class="navbar">
-        <ul class="nav-links">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="aircraft.html" class="active">Aircraft</a></li>
-            <li><a href="about.html">About</a></li>
-            <li><a href="contact.html">Contact</a></li>
-            <li><a href="signin.html">Sign In</a></li>
-        </ul>
+        <div class="navbar-container">
+            <a href="index.html" class="site-logo">
+                <img src="images/logo.png" alt="Lockheed Martin Aircraft Educational Website">
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="aircraft.html" class="active">Aircraft</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li><a href="signin.html">Sign In</a></li>
+            </ul>
+        </div>
     </nav>
 
     <!-- Main Content -->
@@ -202,13 +209,27 @@
             </div>
         </section>
 
+        <!-- Floating Toast Message for Favorites Notifications (STEP 10 & 27) -->
+        <div id="favoritesToast" class="favorites-toast" style="display: none;" role="alert">
+            <span id="favoritesToastText">Please sign in to save favorites.</span>
+            <a href="signin.html" id="favoritesToastLink" class="btn-card" style="margin-left: 8px; padding: 5px 12px; font-size: 13px; text-decoration: none;">Sign In</a>
+            <button type="button" class="toast-close-btn" onclick="document.getElementById('favoritesToast').style.display='none';">&times;</button>
+        </div>
+
     </main>
 
     <!-- Footer Section -->
     <footer class="site-footer">
         <div class="footer-container">
             <p class="footer-note">Student Educational Project</p>
-            <p class="footer-copy">&copy; 2026 Lockheed Martin Aircraft</p>
+            <p class="footer-copy">&copy; 2026 Lockheed Martin Aircraft &mdash; Developed by Bhavin Shankur</p>
+            <p class="footer-disclaimer">This website is a student educational project created for academic purposes as part of a college Full Stack Development course. It is not affiliated with, sponsored by, or officially connected to Lockheed Martin Corporation.</p>
+            <div class="footer-social-links">
+                <a href="https://www.linkedin.com/in/bhavin-shankur-8421a0371" target="_blank" rel="noopener noreferrer">&#x1F517; LinkedIn</a>
+                <a href="https://github.com/exobhavinss-sketch" target="_blank" rel="noopener noreferrer">&#x1F4BB; GitHub</a>
+                <a href="https://www.instagram.com/bhavinnh/" target="_blank" rel="noopener noreferrer">&#x1F4F7; Instagram</a>
+                <a href="https://x.com/BhavinShankur" target="_blank" rel="noopener noreferrer">&#x1F426; X / Twitter</a>
+            </div>
             <nav class="footer-nav">
                 <a href="index.html">Home</a>
                 <a href="aircraft.html">Aircraft</a>

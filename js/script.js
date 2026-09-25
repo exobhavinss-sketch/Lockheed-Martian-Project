@@ -277,19 +277,21 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // ======================================================================
-    // 4. Contact Form Validation (contact.html)
+    // 4. Contact Form Validation & Submission (contact.html)
+    //    Uses FormSubmit.co for email delivery — no API keys required.
     // ======================================================================
     const contactForm = document.getElementById("contactForm");
     const contactMessage = document.getElementById("contactMessage");
 
     if (contactForm && contactMessage) {
-        contactForm.addEventListener("submit", function (event) {
+        contactForm.addEventListener("submit", async function (event) {
             event.preventDefault();
 
             const name = document.getElementById("name").value.trim();
             const email = document.getElementById("email").value.trim();
             const subject = document.getElementById("subject").value.trim();
             const message = document.getElementById("message").value.trim();
+            const topic = document.getElementById("topic") ? document.getElementById("topic").value : "";
 
             contactMessage.textContent = "";
             contactMessage.className = "";
@@ -300,10 +302,47 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            contactMessage.textContent = "Your message has been submitted successfully. This is currently a frontend demonstration.";
-            contactMessage.className = "success-message";
+            // Disable button while sending
+            const submitBtn = contactForm.querySelector("button[type='submit']");
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Sending...";
+            }
 
-            contactForm.reset();
+            try {
+                const response = await fetch("https://formsubmit.co/ajax/bhavinshankur.tech@yahoo.com", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        email: email,
+                        _subject: subject,
+                        topic: topic,
+                        message: message
+                    })
+                });
+
+                if (response.ok) {
+                    contactMessage.textContent = "Your message has been sent successfully! We will get back to you soon.";
+                    contactMessage.className = "success-message";
+                    contactForm.reset();
+                } else {
+                    contactMessage.textContent = "There was a problem sending your message. Please try again later.";
+                    contactMessage.className = "error-message";
+                }
+            } catch (err) {
+                contactMessage.textContent = "A network error occurred. Please check your connection and try again.";
+                contactMessage.className = "error-message";
+            }
+
+            // Re-enable button
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Send Message";
+            }
         });
     }
 
@@ -320,7 +359,18 @@ document.addEventListener("DOMContentLoaded", function () {
         loadUserProfileDashboard();
     }
 
-    // Edit Profile form submission
+    // Edit Profile toggle buttons (STEPS 3 & 5)
+    const editProfileBtn = document.getElementById("editProfileBtn");
+    if (editProfileBtn) {
+        editProfileBtn.addEventListener("click", startEditProfile);
+    }
+
+    const cancelEditProfileBtn = document.getElementById("cancelEditProfileBtn");
+    if (cancelEditProfileBtn) {
+        cancelEditProfileBtn.addEventListener("click", cancelEditProfile);
+    }
+
+    // Edit Profile form submission (STEPS 5, 6, 7)
     if (editProfileForm) {
         editProfileForm.addEventListener("submit", handleProfileUpdate);
     }
@@ -454,10 +504,118 @@ async function getOrCreateUserProfile(user, formValues = null) {
     }
 }
 
+// In-memory profile state cache to allow instant cancel/restore without unnecessary Supabase queries (STEP 5)
+let currentProfileData = null;
+
+/**
+ * Helper function to set the aircraft interest dropdown value.
+ * STEP 4: If the existing profile contains another valid aircraft-interest value,
+ * it preserves it by dynamically appending an option instead of dropping it.
+ */
+function setAircraftInterestDropdown(selectElement, targetValue) {
+    if (!selectElement) return;
+    if (!targetValue || targetValue.trim() === "") {
+        selectElement.selectedIndex = 0;
+        return;
+    }
+
+    const trimmed = targetValue.trim();
+    let found = false;
+
+    for (let i = 0; i < selectElement.options.length; i++) {
+        if (selectElement.options[i].value.toLowerCase() === trimmed.toLowerCase()) {
+            selectElement.selectedIndex = i;
+            found = true;
+            break;
+        }
+    }
+
+    // Preserve custom or pre-existing category value
+    if (!found) {
+        const customOption = document.createElement("option");
+        customOption.value = trimmed;
+        customOption.textContent = trimmed;
+        selectElement.appendChild(customOption);
+        selectElement.value = trimmed;
+    }
+}
+
+/**
+ * STEP 5: Enters Edit Mode on dashboard.html:
+ * - Hides the read-only display.
+ * - Shows the editable form pre-populated with current profile values.
+ * - Clears any previous status messages.
+ */
+function startEditProfile() {
+    const readOnlyView = document.getElementById("profileReadOnlyView");
+    const editView = document.getElementById("profileEditView");
+    const editBtn = document.getElementById("editProfileBtn");
+    const editMsg = document.getElementById("editProfileMessage");
+
+    const editEmail = document.getElementById("editEmail");
+    const editFullName = document.getElementById("editFullName");
+    const editUsername = document.getElementById("editUsername");
+    const editAircraftInterest = document.getElementById("editAircraftInterest");
+
+    if (editMsg) {
+        editMsg.textContent = "";
+        editMsg.className = "";
+    }
+
+    // Populate editable fields with the current profile values
+    if (currentProfileData) {
+        if (editEmail) editEmail.value = currentProfileData.email || "";
+        if (editFullName) editFullName.value = currentProfileData.full_name || "";
+        if (editUsername) editUsername.value = currentProfileData.username || "";
+        if (editAircraftInterest) setAircraftInterestDropdown(editAircraftInterest, currentProfileData.aircraft_interest);
+    }
+
+    if (readOnlyView) readOnlyView.style.display = "none";
+    if (editBtn) editBtn.style.display = "none";
+    if (editView) editView.style.display = "block";
+
+    if (editFullName) editFullName.focus();
+}
+
+/**
+ * STEP 5: Exits Edit Mode on dashboard.html:
+ * - Restores previous saved profile values.
+ * - Does NOT send anything to Supabase.
+ * - Restores the clean read-only display.
+ */
+function cancelEditProfile() {
+    const readOnlyView = document.getElementById("profileReadOnlyView");
+    const editView = document.getElementById("profileEditView");
+    const editBtn = document.getElementById("editProfileBtn");
+    const editMsg = document.getElementById("editProfileMessage");
+
+    const editEmail = document.getElementById("editEmail");
+    const editFullName = document.getElementById("editFullName");
+    const editUsername = document.getElementById("editUsername");
+    const editAircraftInterest = document.getElementById("editAircraftInterest");
+
+    // Clear any active error/status messages
+    if (editMsg) {
+        editMsg.textContent = "";
+        editMsg.className = "";
+    }
+
+    // Restore form fields to current cached profile values without sending any request
+    if (currentProfileData) {
+        if (editEmail) editEmail.value = currentProfileData.email || "";
+        if (editFullName) editFullName.value = currentProfileData.full_name || "";
+        if (editUsername) editUsername.value = currentProfileData.username || "";
+        if (editAircraftInterest) setAircraftInterestDropdown(editAircraftInterest, currentProfileData.aircraft_interest);
+    }
+
+    if (editView) editView.style.display = "none";
+    if (readOnlyView) readOnlyView.style.display = "block";
+    if (editBtn) editBtn.style.display = "inline-block";
+}
+
 /**
  * Loads the authenticated user's session and displays their information on dashboard.html.
- * STEP 11: Retrieves the user's profile from public.profiles table instead of relying only on Auth metadata.
- * STEP 12: Handles missing profile gracefully without showing JavaScript or SQL errors.
+ * STEP 9: Checks authentication, loads profile from public.profiles, displays Email, Full Name, Username, Interest.
  */
 async function loadUserProfileDashboard() {
     const dashboardMessage = document.getElementById("dashboardMessage");
@@ -468,6 +626,7 @@ async function loadUserProfileDashboard() {
     const userInterest = document.getElementById("userInterest");
     const userMemberSince = document.getElementById("userMemberSince");
 
+    const editEmail = document.getElementById("editEmail");
     const editFullName = document.getElementById("editFullName");
     const editUsername = document.getElementById("editUsername");
     const editAircraftInterest = document.getElementById("editAircraftInterest");
@@ -488,29 +647,38 @@ async function loadUserProfileDashboard() {
     }
 
     try {
-        // Step 1: Verify authenticated session using getSession() (STEP 16 / TEST 8)
+        // STEP 9: Step 1 — Verify authenticated session using getSession()
         const { data: authData, error: authError } = await window.supabaseClient.auth.getSession();
 
         if (authError || !authData || !authData.session || !authData.session.user) {
-            // TEST 8: Redirect to signin.html if unauthenticated
+            // Redirect unauthenticated visitors to signin.html
             window.location.href = "signin.html";
             return;
         }
 
         const user = authData.session.user;
 
-        // STEP 11 & 12: Retrieve user's profile from public.profiles
-        // If missing: attempts to create from Auth metadata, refetches, and displays
+        // STEP 9: Step 2 & 3 — Load current user's profile from public.profiles
         const { profile, error: profileError } = await getOrCreateUserProfile(user);
 
         if (profile) {
-            // STEP 11: Display profile data from public.profiles
             const displayName = profile.full_name || "Member";
             const displayUsername = profile.username || (user.email ? user.email.split("@")[0] : "user");
             const displayEmail = profile.email || user.email;
             const displayInterest = profile.aircraft_interest || "Fighter Aircraft";
             const memberDate = profile.created_at || user.created_at;
 
+            // Cache current profile data
+            currentProfileData = {
+                id: user.id,
+                email: displayEmail,
+                full_name: displayName,
+                username: displayUsername,
+                aircraft_interest: displayInterest,
+                created_at: memberDate
+            };
+
+            // STEP 9: Step 4 — Display Email, Full Name, Username, Aircraft Interest
             if (userWelcome) userWelcome.textContent = displayName;
             if (userFullName) userFullName.textContent = displayName;
             if (userUsername) userUsername.textContent = displayUsername;
@@ -519,11 +687,12 @@ async function loadUserProfileDashboard() {
             if (userMemberSince) userMemberSince.textContent = formatMemberDate(memberDate);
 
             // Pre-fill Edit Profile Form inputs
+            if (editEmail) editEmail.value = displayEmail;
             if (editFullName) editFullName.value = displayName;
             if (editUsername) editUsername.value = displayUsername;
-            if (editAircraftInterest) editAircraftInterest.value = displayInterest;
+            if (editAircraftInterest) setAircraftInterestDropdown(editAircraftInterest, displayInterest);
+
         } else {
-            // STEP 12: Handle missing profile gracefully without showing JavaScript or SQL errors
             console.error("Profile could not be loaded from public.profiles:", profileError);
 
             if (dashboardMessage) {
@@ -531,12 +700,21 @@ async function loadUserProfileDashboard() {
                 dashboardMessage.className = "error-message";
             }
 
-            // Safe fallback display from Auth metadata so user sees their basic account info
+            // Safe fallback display from Auth metadata
             const metadata = user.user_metadata || {};
             const fallbackName = metadata.full_name || "Member";
             const fallbackUsername = metadata.username || (user.email ? user.email.split("@")[0] : "user");
             const fallbackEmail = user.email || "N/A";
             const fallbackInterest = metadata.aircraft_interest || "Fighter Aircraft";
+
+            currentProfileData = {
+                id: user.id,
+                email: fallbackEmail,
+                full_name: fallbackName,
+                username: fallbackUsername,
+                aircraft_interest: fallbackInterest,
+                created_at: user.created_at
+            };
 
             if (userWelcome) userWelcome.textContent = fallbackName;
             if (userFullName) userFullName.textContent = fallbackName;
@@ -545,17 +723,27 @@ async function loadUserProfileDashboard() {
             if (userInterest) userInterest.textContent = fallbackInterest;
             if (userMemberSince) userMemberSince.textContent = formatMemberDate(user.created_at);
 
+            if (editEmail) editEmail.value = fallbackEmail;
             if (editFullName) editFullName.value = fallbackName;
             if (editUsername) editUsername.value = fallbackUsername;
-            if (editAircraftInterest) editAircraftInterest.value = fallbackInterest;
+            if (editAircraftInterest) setAircraftInterestDropdown(editAircraftInterest, fallbackInterest);
         }
 
-        // Safely load saved aircraft if favorites table exists
-        if (typeof loadUserSavedAircraft === "function") {
+        // Ensure read-only view is visible initially and edit form view is hidden (STEP 3)
+        const readOnlyView = document.getElementById("profileReadOnlyView");
+        const editView = document.getElementById("profileEditView");
+        const editBtn = document.getElementById("editProfileBtn");
+
+        if (readOnlyView) readOnlyView.style.display = "block";
+        if (editView) editView.style.display = "none";
+        if (editBtn) editBtn.style.display = "inline-block";
+
+        // Safely load saved favorites
+        if (typeof loadDashboardFavorites === "function") {
             try {
-                loadUserSavedAircraft(user.id);
+                await loadDashboardFavorites();
             } catch (favErr) {
-                // Ignore if favorites table is not created yet
+                console.warn("Could not load dashboard favorites:", favErr);
             }
         }
 
@@ -566,69 +754,126 @@ async function loadUserProfileDashboard() {
 }
 
 /**
- * STEP 6: Handles Edit Profile form submission.
- * Updates public.profiles row guarded by RLS (auth.uid() = id).
- * STEP 15: Handles duplicate username or other database errors gracefully.
+ * STEP 5, 6, 7, 10: Handles Edit Profile form submission.
+ * - Form validation (STEP 6)
+ * - Restricts update strictly to authenticated user's own profile row where id = user.id (STEP 7)
+ * - Loading state (STEP 5)
+ * - Graceful error handling (STEP 10)
+ * - Immediate UI update & return to read-only mode (STEP 5)
  */
 async function handleProfileUpdate(event) {
     event.preventDefault();
 
     const editProfileMessage = document.getElementById("editProfileMessage");
-    const editFullName = document.getElementById("editFullName").value.trim();
-    const editUsername = document.getElementById("editUsername").value.trim();
-    const editAircraftInterest = document.getElementById("editAircraftInterest").value;
+    const editFullNameInput = document.getElementById("editFullName");
+    const editUsernameInput = document.getElementById("editUsername");
+    const editAircraftInterestInput = document.getElementById("editAircraftInterest");
     const saveProfileBtn = document.getElementById("saveProfileBtn");
 
-    editProfileMessage.textContent = "";
-    editProfileMessage.className = "";
+    const editFullName = editFullNameInput ? editFullNameInput.value.trim() : "";
+    const editUsername = editUsernameInput ? editUsernameInput.value.trim() : "";
+    const editAircraftInterest = editAircraftInterestInput ? editAircraftInterestInput.value.trim() : "";
 
-    // Validation
-    if (editFullName === "" || editUsername === "" || editAircraftInterest === "") {
-        editProfileMessage.textContent = "Please fill in all profile fields.";
-        editProfileMessage.className = "error-message";
+    if (editProfileMessage) {
+        editProfileMessage.textContent = "";
+        editProfileMessage.className = "";
+    }
+
+    // STEP 6: Beginner-Friendly Client-Side Validation
+    // 1. Full Name: required & minimum length
+    if (editFullName === "") {
+        if (editProfileMessage) {
+            editProfileMessage.textContent = "Please enter your full name.";
+            editProfileMessage.className = "error-message";
+        }
+        if (editFullNameInput) editFullNameInput.focus();
+        return;
+    }
+
+    if (editFullName.length < 2) {
+        if (editProfileMessage) {
+            editProfileMessage.textContent = "Full name must be at least 2 characters.";
+            editProfileMessage.className = "error-message";
+        }
+        if (editFullNameInput) editFullNameInput.focus();
+        return;
+    }
+
+    // 2. Username: required & minimum length
+    if (editUsername === "") {
+        if (editProfileMessage) {
+            editProfileMessage.textContent = "Please enter a username.";
+            editProfileMessage.className = "error-message";
+        }
+        if (editUsernameInput) editUsernameInput.focus();
+        return;
+    }
+
+    if (editUsername.length < 3) {
+        if (editProfileMessage) {
+            editProfileMessage.textContent = "Username must be at least 3 characters.";
+            editProfileMessage.className = "error-message";
+        }
+        if (editUsernameInput) editUsernameInput.focus();
+        return;
+    }
+
+    // 3. Aircraft Interest: required
+    if (editAircraftInterest === "") {
+        if (editProfileMessage) {
+            editProfileMessage.textContent = "Please select an aircraft interest.";
+            editProfileMessage.className = "error-message";
+        }
+        if (editAircraftInterestInput) editAircraftInterestInput.focus();
         return;
     }
 
     if (!window.supabaseClient) {
-        editProfileMessage.textContent = "Supabase client is not available.";
-        editProfileMessage.className = "error-message";
+        if (editProfileMessage) {
+            editProfileMessage.textContent = "Supabase client is not available. Please try again.";
+            editProfileMessage.className = "error-message";
+        }
         return;
     }
 
-    // Disable button during update
+    // STEP 5: Show loading state while saving
     if (saveProfileBtn) {
         saveProfileBtn.disabled = true;
         saveProfileBtn.textContent = "Saving...";
     }
 
     try {
-        // Retrieve current authenticated user
-        const { data: authData } = await window.supabaseClient.auth.getSession();
-        if (!authData || !authData.session || !authData.session.user) {
+        // Retrieve current authenticated session
+        const { data: authData, error: authError } = await window.supabaseClient.auth.getSession();
+        if (authError || !authData || !authData.session || !authData.session.user) {
             window.location.href = "signin.html";
             return;
         }
 
         const user = authData.session.user;
 
-        // STEP 6: Update user's row in public.profiles table (enforced by RLS auth.uid() = id)
-        const { error: dbUpdateError } = await window.supabaseClient
+        // STEP 7 & 11: Update only the current user's profile row (guarded by RLS auth.uid() = id)
+        const { data: updatedProfile, error: dbUpdateError } = await window.supabaseClient
             .from("profiles")
             .update({
                 full_name: editFullName,
                 username: editUsername,
                 aircraft_interest: editAircraftInterest
             })
-            .eq("id", user.id);
+            .eq("id", user.id)
+            .select()
+            .single();
 
         if (dbUpdateError) {
-            // STEP 15: Handle duplicate username or database errors gracefully without raw SQL errors
-            if (dbUpdateError.message && dbUpdateError.message.toLowerCase().includes("unique")) {
-                editProfileMessage.textContent = "This username is already taken. Please choose another username.";
-            } else {
-                editProfileMessage.textContent = "Could not update profile in database. Please try again.";
+            console.error("Error updating profile in Supabase:", dbUpdateError);
+            if (editProfileMessage) {
+                if (dbUpdateError.message && dbUpdateError.message.toLowerCase().includes("unique")) {
+                    editProfileMessage.textContent = "This username is already taken. Please choose another username.";
+                } else {
+                    editProfileMessage.textContent = "Unable to update your profile. Please try again.";
+                }
+                editProfileMessage.className = "error-message";
             }
-            editProfileMessage.className = "error-message";
             if (saveProfileBtn) {
                 saveProfileBtn.disabled = false;
                 saveProfileBtn.textContent = "Save Changes";
@@ -636,20 +881,28 @@ async function handleProfileUpdate(event) {
             return;
         }
 
-        // Also update Auth metadata to keep auth and profile synchronized
-        await window.supabaseClient.auth.updateUser({
-            data: {
-                full_name: editFullName,
-                username: editUsername,
-                aircraft_interest: editAircraftInterest
-            }
-        });
+        // Synchronize Supabase Auth user metadata
+        try {
+            await window.supabaseClient.auth.updateUser({
+                data: {
+                    full_name: editFullName,
+                    username: editUsername,
+                    aircraft_interest: editAircraftInterest
+                }
+            });
+        } catch (metaErr) {
+            console.warn("Could not sync auth metadata:", metaErr);
+        }
 
-        // Display success confirmation
-        editProfileMessage.textContent = "Profile updated successfully.";
-        editProfileMessage.className = "success-message";
+        // Update in-memory profile cache
+        currentProfileData = {
+            ...(currentProfileData || {}),
+            full_name: editFullName,
+            username: editUsername,
+            aircraft_interest: editAircraftInterest
+        };
 
-        // Refresh the displayed overview on the dashboard
+        // STEP 5: Update read-only DOM display immediately
         const userWelcome = document.getElementById("userWelcome");
         const userFullName = document.getElementById("userFullName");
         const userUsername = document.getElementById("userUsername");
@@ -660,9 +913,41 @@ async function handleProfileUpdate(event) {
         if (userUsername) userUsername.textContent = editUsername;
         if (userInterest) userInterest.textContent = editAircraftInterest;
 
+        // STEP 5 & 10: Show friendly success message
+        if (editProfileMessage) {
+            editProfileMessage.textContent = "Profile updated successfully.";
+            editProfileMessage.className = "success-message";
+        }
+
+        // STEP 5: Return to read-only mode after saving
+        setTimeout(function () {
+            const readOnlyView = document.getElementById("profileReadOnlyView");
+            const editView = document.getElementById("profileEditView");
+            const editBtn = document.getElementById("editProfileBtn");
+            const dashboardMsg = document.getElementById("dashboardMessage");
+
+            if (editView) editView.style.display = "none";
+            if (readOnlyView) readOnlyView.style.display = "block";
+            if (editBtn) editBtn.style.display = "inline-block";
+
+            if (dashboardMsg) {
+                dashboardMsg.textContent = "Profile updated successfully.";
+                dashboardMsg.className = "success-message";
+                dashboardMsg.style.display = "block";
+                setTimeout(function () {
+                    if (dashboardMsg && dashboardMsg.classList.contains("success-message")) {
+                        dashboardMsg.style.display = "none";
+                    }
+                }, 4000);
+            }
+        }, 600);
+
     } catch (err) {
-        editProfileMessage.textContent = "An error occurred while saving profile changes. Please try again.";
-        editProfileMessage.className = "error-message";
+        console.error("Unexpected error in handleProfileUpdate:", err);
+        if (editProfileMessage) {
+            editProfileMessage.textContent = "Something went wrong. Please try again.";
+            editProfileMessage.className = "error-message";
+        }
     } finally {
         if (saveProfileBtn) {
             saveProfileBtn.disabled = false;
@@ -985,6 +1270,9 @@ async function loadAircraftCollection() {
         // STEP 6: Store loaded aircraft in JavaScript array
         allAircraft = aircraftList || [];
 
+        // STEP 12 & 13: Load current user's favorites from Supabase public.favorites
+        await loadUserFavorites();
+
         // STEP 17, 18, 19: Set up search and filter event listeners
         initAircraftFilters();
 
@@ -1039,6 +1327,7 @@ function filterAircraft() {
  * 2. Updates result count (STEP 11).
  * 3. Shows no-results message if 0 matches (STEP 12).
  * 4. Loops through filtered aircraft and creates cards using existing design (STEP 14, 15, 16).
+ * 5. Adds interactive Favorite button to each card (STEP 11, 14, 15, 16, 17).
  */
 function renderAircraft(aircraftList) {
     const aircraftGrid = document.getElementById("aircraftGrid");
@@ -1112,7 +1401,10 @@ function renderAircraft(aircraftList) {
             </figure>
         `;
 
-        // STEP 14 & 15: Display image, name, category, status, description, and View Details button with actual UUID
+        // STEP 14: Check favorite status for this aircraft
+        const isFav = isAircraftFavorited(aircraft.id);
+
+        // STEP 11, 14, 15: Display card with View Details and Favorite Button
         card.innerHTML = `
             ${imageHtml}
             <h3>${escapeHtml(aircraft.name)}</h3>
@@ -1120,8 +1412,23 @@ function renderAircraft(aircraftList) {
             <p class="aircraft-status"><strong>Status:</strong> ${escapeHtml(aircraft.status)}</p>
             ${specialBadgeHtml}
             <p class="aircraft-desc">${escapeHtml(aircraft.description || "")}</p>
-            <a href="aircraft-details.html?id=${encodeURIComponent(aircraft.id)}" class="btn-card">View Details</a>
+            <div class="card-action-row">
+                <a href="aircraft-details.html?id=${encodeURIComponent(aircraft.id)}" class="btn-card">View Details</a>
+                <button type="button" class="btn-favorite-toggle ${isFav ? 'is-favorited' : ''}" data-aircraft-id="${aircraft.id}" aria-label="${isFav ? 'Remove from Favorites' : 'Add to Favorites'}" title="${isFav ? 'Click to remove from favorites' : 'Click to add to favorites'}">
+                    ${isFav ? '♥ Remove from Favorites' : '♡ Add to Favorites'}
+                </button>
+            </div>
         `;
+
+        // STEP 17: Prevent favorite button click from opening details or triggering parent card clicks
+        const favBtn = card.querySelector(".btn-favorite-toggle");
+        if (favBtn) {
+            favBtn.addEventListener("click", function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                toggleFavorite(aircraft.id, favBtn);
+            });
+        }
 
         aircraftGrid.appendChild(card);
     });
@@ -1365,6 +1672,9 @@ async function loadAircraftDetailsPage() {
             `;
         }
 
+        // 7. STEP 18: Initialize favorite button for this aircraft on details page
+        await initDetailsPageFavorite(aircraft.id);
+
     } catch (err) {
         console.error("Unexpected error in loadAircraftDetailsPage:", err);
         detailsContainer.style.display = "none";
@@ -1390,222 +1700,305 @@ function escapeHtml(text) {
 
 
 // ==========================================================================
-// 8. Favorites / Saved Aircraft Functions
+// 8. User Favorites System (public.favorites)
 // ==========================================================================
 
+let userFavoriteIds = new Set();
+let currentAuthUser = null;
+
 /**
- * Initializes the "☆ Save Aircraft" button on aircraft-details.html.
- * Checks if the current user is authenticated and if the aircraft is already saved.
- * Toggles save / remove and enforces authentication rules.
+ * STEP 12 & 13: Checks current Supabase authentication session and retrieves
+ * the current user's saved aircraft IDs from public.favorites.
+ * Populates userFavoriteIds Set. Safe for unauthenticated visitors.
  */
-async function initAircraftSaveButton() {
-    const saveBtn = document.getElementById("saveAircraftButton");
-    const saveMsg = document.getElementById("saveAircraftMessage");
+async function loadUserFavorites() {
+    userFavoriteIds.clear();
+    currentAuthUser = null;
 
-    if (!saveBtn) return;
-
-    // 1. Get currently selected aircraft ID from URL parameters
-    const params = new URLSearchParams(window.location.search);
-    const aircraftParam = params.get("aircraft");
-
-    if (!aircraftParam) {
-        saveBtn.style.display = "none";
-        return;
+    if (!window.supabaseClient) {
+        return userFavoriteIds;
     }
 
-    const aircraftId = aircraftParam.trim().toLowerCase();
+    try {
+        const { data: sessionData } = await window.supabaseClient.auth.getSession();
+        const session = sessionData?.session;
+        currentAuthUser = session?.user || null;
 
-    // Verify aircraft exists in local data
-    if (!aircraftData[aircraftId]) {
-        saveBtn.style.display = "none";
-        return;
-    }
+        if (!currentAuthUser) {
+            return userFavoriteIds;
+        }
 
-    // 2. Check if user is currently signed in and whether this aircraft is already saved
-    if (window.supabaseClient) {
-        try {
-            const { data: authData } = await window.supabaseClient.auth.getSession();
-            const user = authData && authData.session && authData.session.user;
+        // Query public.favorites for this user only (guarded by RLS auth.uid() = user_id)
+        const { data: favorites, error } = await window.supabaseClient
+            .from("favorites")
+            .select("aircraft_id")
+            .eq("user_id", currentAuthUser.id);
 
-            if (user) {
-                // Query favorites table for current user and aircraft
-                const { data: favorite, error } = await window.supabaseClient
-                    .from("favorites")
-                    .select("id")
-                    .eq("user_id", user.id)
-                    .eq("aircraft_id", aircraftId)
-                    .maybeSingle();
+        if (error) {
+            console.error("Error loading user favorites from Supabase:", error);
+            return userFavoriteIds;
+        }
 
-                if (!error && favorite) {
-                    // Aircraft is already saved
-                    saveBtn.classList.add("is-saved");
-                    saveBtn.textContent = "★ Saved Aircraft";
-                    saveBtn.setAttribute("title", "Click to remove from saved aircraft");
-                } else {
-                    saveBtn.classList.remove("is-saved");
-                    saveBtn.textContent = "☆ Save Aircraft";
-                    saveBtn.setAttribute("title", "Click to save aircraft");
+        if (favorites && Array.isArray(favorites)) {
+            favorites.forEach(function (fav) {
+                if (fav.aircraft_id) {
+                    userFavoriteIds.add(fav.aircraft_id);
                 }
-            }
-        } catch (err) {
-            console.warn("Could not check saved aircraft status:", err);
+            });
         }
+
+        return userFavoriteIds;
+    } catch (err) {
+        console.error("Unexpected error in loadUserFavorites:", err);
+        return userFavoriteIds;
+    }
+}
+
+/**
+ * STEP 14: Checks if a specific aircraft is saved in the current user's favorites.
+ */
+function isAircraftFavorited(aircraftId) {
+    if (!aircraftId) return false;
+    return userFavoriteIds.has(aircraftId);
+}
+
+/**
+ * Shows a user-friendly floating toast message.
+ */
+function showFavoriteToast(message, type = "info", showSignInLink = false) {
+    const toast = document.getElementById("favoritesToast");
+    const textEl = document.getElementById("favoritesToastText");
+    const linkEl = document.getElementById("favoritesToastLink");
+
+    if (!toast || !textEl) return;
+
+    textEl.textContent = message;
+    toast.className = `favorites-toast ${type === "error" ? "error-toast" : type === "success" ? "success-toast" : ""}`;
+
+    if (linkEl) {
+        linkEl.style.display = showSignInLink ? "inline-block" : "none";
     }
 
-    // 3. Handle Save / Remove button click
-    saveBtn.addEventListener("click", async function () {
-        // Clear previous messages
-        if (saveMsg) {
-            saveMsg.style.display = "none";
-            saveMsg.innerHTML = "";
-            saveMsg.className = "save-aircraft-message";
-        }
+    toast.style.display = "flex";
 
-        // Check if Supabase client is configured
-        if (!window.supabaseClient) {
-            if (saveMsg) {
-                saveMsg.innerHTML = "<strong>Configuration Needed:</strong> Supabase credentials are not configured yet. Please open <code>js/supabase.js</code>.";
-                saveMsg.className = "save-aircraft-message error-msg";
-                saveMsg.style.display = "block";
+    if (!showSignInLink) {
+        clearTimeout(toast._timeout);
+        toast._timeout = setTimeout(function () {
+            if (toast) toast.style.display = "none";
+        }, 3500);
+    }
+}
+
+/**
+ * Shows a user-friendly message in the details page notification box.
+ */
+function showDetailsFavoriteMessage(message, type = "info", showSignInLink = false) {
+    const msgEl = document.getElementById("saveAircraftMessage");
+    if (!msgEl) return;
+
+    if (showSignInLink) {
+        msgEl.innerHTML = `${escapeHtml(message)} <a href="signin.html">Sign In</a>`;
+    } else {
+        msgEl.textContent = message;
+    }
+
+    msgEl.className = `save-aircraft-message ${type === "error" ? "error-msg" : type === "success" ? "success-msg" : "info-msg"}`;
+    msgEl.style.display = "block";
+
+    if (!showSignInLink) {
+        setTimeout(function () {
+            if (msgEl) msgEl.style.display = "none";
+        }, 3500);
+    }
+}
+
+/**
+ * Updates button label and visual state across cards and details pages.
+ */
+function updateFavoriteButtonUI(buttonElement, isFavorited) {
+    if (!buttonElement) return;
+
+    if (isFavorited) {
+        buttonElement.textContent = "♥ Remove from Favorites";
+        buttonElement.classList.add("is-favorited");
+        buttonElement.classList.add("is-saved");
+        buttonElement.setAttribute("aria-label", "Remove from Favorites");
+        buttonElement.setAttribute("title", "Click to remove from favorites");
+    } else {
+        buttonElement.textContent = "♡ Add to Favorites";
+        buttonElement.classList.remove("is-favorited");
+        buttonElement.classList.remove("is-saved");
+        buttonElement.setAttribute("aria-label", "Add to Favorites");
+        buttonElement.setAttribute("title", "Click to add to favorites");
+    }
+}
+
+/**
+ * STEP 10, 15, 16, 26, 27: Toggles favorite state (Add or Remove) for a specific aircraft ID.
+ * Enforces authentication (STEP 10), handles duplicate constraints (STEP 26),
+ * and updates local userFavoriteIds state without full page reload.
+ */
+async function toggleFavorite(aircraftId, buttonElement, messageContainer = null) {
+    if (!aircraftId || !window.supabaseClient) return;
+
+    // STEP 10: Check authentication
+    try {
+        const { data: sessionData } = await window.supabaseClient.auth.getSession();
+        const session = sessionData?.session;
+        currentAuthUser = session?.user || null;
+
+        // If unauthenticated: do NOT perform anonymous insert
+        if (!currentAuthUser) {
+            const unauthMsg = "Please sign in to save favorites.";
+            if (messageContainer) {
+                showDetailsFavoriteMessage(unauthMsg, "error", true);
+            } else {
+                showFavoriteToast(unauthMsg, "error", true);
             }
             return;
         }
 
-        try {
-            // Check active Supabase authentication session
-            const { data: authData, error: authError } = await window.supabaseClient.auth.getSession();
-            const user = authData && authData.session && authData.session.user;
+        const currentlyFavorited = isAircraftFavorited(aircraftId);
 
-            // SECTION 2 RULE: If visitor is NOT signed in:
-            // Display: "Please sign in to save aircraft." with link to signin.html
-            if (authError || !user) {
-                if (saveMsg) {
-                    saveMsg.innerHTML = 'Please <a href="signin.html">sign in</a> to save aircraft.';
-                    saveMsg.className = "save-aircraft-message info-msg";
-                    saveMsg.style.display = "block";
+        if (buttonElement) {
+            buttonElement.disabled = true;
+        }
+
+        if (currentlyFavorited) {
+            // STEP 16: Remove Favorite — delete where user_id = currentUser.id AND aircraft_id = aircraftId
+            const { error: deleteError } = await window.supabaseClient
+                .from("favorites")
+                .delete()
+                .eq("user_id", currentAuthUser.id)
+                .eq("aircraft_id", aircraftId);
+
+            if (buttonElement) {
+                buttonElement.disabled = false;
+            }
+
+            if (deleteError) {
+                console.error("Error removing favorite from Supabase:", deleteError);
+                const errMsg = "Unable to update favorites. Please try again.";
+                if (messageContainer) {
+                    showDetailsFavoriteMessage(errMsg, "error");
+                } else {
+                    showFavoriteToast(errMsg, "error");
                 }
                 return;
             }
 
-            const isSaved = saveBtn.classList.contains("is-saved");
+            // Update local state
+            userFavoriteIds.delete(aircraftId);
+            updateFavoriteButtonUI(buttonElement, false);
 
-            if (isSaved) {
-                // ==============================================================
-                // REMOVE FAVORITE: Delete row from favorites table
-                // ==============================================================
-                saveBtn.disabled = true;
-                saveBtn.textContent = "Removing...";
-
-                const { error: deleteError } = await window.supabaseClient
-                    .from("favorites")
-                    .delete()
-                    .eq("user_id", user.id)
-                    .eq("aircraft_id", aircraftId);
-
-                saveBtn.disabled = false;
-
-                if (deleteError) {
-                    if (saveMsg) {
-                        saveMsg.textContent = "Failed to remove aircraft: " + deleteError.message;
-                        saveMsg.className = "save-aircraft-message error-msg";
-                        saveMsg.style.display = "block";
-                    }
-                    saveBtn.textContent = "★ Saved Aircraft";
-                    return;
-                }
-
-                // Update button appearance
-                saveBtn.classList.remove("is-saved");
-                saveBtn.textContent = "☆ Save Aircraft";
-                saveBtn.setAttribute("title", "Click to save aircraft");
-
-                if (saveMsg) {
-                    saveMsg.textContent = "Aircraft removed from your saved list.";
-                    saveMsg.className = "save-aircraft-message success-msg";
-                    saveMsg.style.display = "block";
-                    setTimeout(function () {
-                        if (saveMsg && saveMsg.classList.contains("success-msg")) {
-                            saveMsg.style.display = "none";
-                        }
-                    }, 3000);
-                }
-
+            const successMsg = "Aircraft removed from favorites.";
+            if (messageContainer) {
+                showDetailsFavoriteMessage(successMsg, "info");
             } else {
-                // ==============================================================
-                // SAVE FAVORITE: Insert row into favorites table
-                // ==============================================================
-                saveBtn.disabled = true;
-                saveBtn.textContent = "Saving...";
-
-                const { error: insertError } = await window.supabaseClient
-                    .from("favorites")
-                    .insert({
-                        user_id: user.id,
-                        aircraft_id: aircraftId
-                    });
-
-                saveBtn.disabled = false;
-
-                if (insertError) {
-                    // Gracefully handle duplicate favorite constraint (code 23505)
-                    if (insertError.code === "23505" || 
-                        (insertError.message && insertError.message.toLowerCase().includes("unique")) ||
-                        (insertError.message && insertError.message.toLowerCase().includes("duplicate"))) {
-                        saveBtn.classList.add("is-saved");
-                        saveBtn.textContent = "★ Saved Aircraft";
-                        saveBtn.setAttribute("title", "Click to remove from saved aircraft");
-                        if (saveMsg) {
-                            saveMsg.textContent = "This aircraft is already saved in your collection.";
-                            saveMsg.className = "save-aircraft-message info-msg";
-                            saveMsg.style.display = "block";
-                        }
-                    } else {
-                        if (saveMsg) {
-                            saveMsg.textContent = "Failed to save aircraft: " + insertError.message;
-                            saveMsg.className = "save-aircraft-message error-msg";
-                            saveMsg.style.display = "block";
-                        }
-                        saveBtn.textContent = "☆ Save Aircraft";
-                    }
-                    return;
-                }
-
-                // Update button appearance to saved state
-                saveBtn.classList.add("is-saved");
-                saveBtn.textContent = "★ Saved Aircraft";
-                saveBtn.setAttribute("title", "Click to remove from saved aircraft");
-
-                if (saveMsg) {
-                    saveMsg.textContent = "Aircraft saved to your dashboard!";
-                    saveMsg.className = "save-aircraft-message success-msg";
-                    saveMsg.style.display = "block";
-                    setTimeout(function () {
-                        if (saveMsg && saveMsg.classList.contains("success-msg")) {
-                            saveMsg.style.display = "none";
-                        }
-                    }, 3000);
-                }
+                showFavoriteToast(successMsg, "info");
             }
 
-        } catch (err) {
-            console.error("Save aircraft error:", err);
-            saveBtn.disabled = false;
-            if (saveMsg) {
-                saveMsg.textContent = "A network error occurred. Please try again.";
-                saveMsg.className = "save-aircraft-message error-msg";
-                saveMsg.style.display = "block";
+        } else {
+            // STEP 15: Add Favorite — insert user_id and aircraft_id
+            const { error: insertError } = await window.supabaseClient
+                .from("favorites")
+                .insert([
+                    { user_id: currentAuthUser.id, aircraft_id: aircraftId }
+                ]);
+
+            if (buttonElement) {
+                buttonElement.disabled = false;
+            }
+
+            if (insertError) {
+                // STEP 26: Gracefully handle duplicate favorite constraint (code 23505)
+                if (insertError.code === "23505" || 
+                    (insertError.message && insertError.message.toLowerCase().includes("unique")) ||
+                    (insertError.message && insertError.message.toLowerCase().includes("duplicate"))) {
+                    userFavoriteIds.add(aircraftId);
+                    updateFavoriteButtonUI(buttonElement, true);
+                    const existMsg = "Aircraft is already in your favorites.";
+                    if (messageContainer) {
+                        showDetailsFavoriteMessage(existMsg, "info");
+                    } else {
+                        showFavoriteToast(existMsg, "info");
+                    }
+                    return;
+                }
+
+                console.error("Error adding favorite to Supabase:", insertError);
+                const errMsg = "Unable to update favorites. Please try again.";
+                if (messageContainer) {
+                    showDetailsFavoriteMessage(errMsg, "error");
+                } else {
+                    showFavoriteToast(errMsg, "error");
+                }
+                return;
+            }
+
+            // Update local state
+            userFavoriteIds.add(aircraftId);
+            updateFavoriteButtonUI(buttonElement, true);
+
+            const successMsg = "Aircraft added to favorites.";
+            if (messageContainer) {
+                showDetailsFavoriteMessage(successMsg, "success");
+            } else {
+                showFavoriteToast(successMsg, "success");
             }
         }
-    });
+
+    } catch (err) {
+        console.error("Unexpected error in toggleFavorite:", err);
+        if (buttonElement) {
+            buttonElement.disabled = false;
+        }
+        const errMsg = "Unable to update favorites. Please try again.";
+        if (messageContainer) {
+            showDetailsFavoriteMessage(errMsg, "error");
+        } else {
+            showFavoriteToast(errMsg, "error");
+        }
+    }
 }
 
 /**
- * Queries Supabase `favorites` table for the current user and renders
- * the corresponding aircraft cards in "MY SAVED AIRCRAFT" on dashboard.html.
- *
- * @param {string} userId - The authenticated user's UUID.
+ * STEP 18: Initializes the favorite button on aircraft-details.html.
  */
-async function loadUserSavedAircraft(userId) {
+async function initDetailsPageFavorite(aircraftId) {
+    const saveBtn = document.getElementById("saveAircraftButton");
+    const saveMsg = document.getElementById("saveAircraftMessage");
+
+    if (!saveBtn || !aircraftId) return;
+
+    // Load user favorites to check state
+    await loadUserFavorites();
+
+    const isFav = isAircraftFavorited(aircraftId);
+    updateFavoriteButtonUI(saveBtn, isFav);
+
+    // Attach click handler
+    saveBtn.onclick = function (event) {
+        event.preventDefault();
+        toggleFavorite(aircraftId, saveBtn, saveMsg);
+    };
+}
+
+/**
+ * Backwards-compatibility wrapper for aircraft-details.html save button.
+ */
+async function initAircraftSaveButton() {
+    const params = new URLSearchParams(window.location.search);
+    const aircraftId = params.get("id");
+    if (aircraftId) {
+        await initDetailsPageFavorite(aircraftId);
+    }
+}
+
+/**
+ * STEP 20: Loads and renders the authenticated user's favorite aircraft on dashboard.html.
+ */
+async function loadDashboardFavorites() {
     const savedGrid = document.getElementById("savedAircraftGrid");
     const savedEmpty = document.getElementById("savedAircraftEmpty");
     const favMsg = document.getElementById("favoritesMessage");
@@ -1613,111 +2006,163 @@ async function loadUserSavedAircraft(userId) {
     if (!savedGrid || !savedEmpty) return;
 
     if (!window.supabaseClient) {
-        if (favMsg) {
-            favMsg.textContent = "Supabase is not configured yet. Cannot load saved aircraft.";
-            favMsg.className = "favorites-message-box error-msg";
-            favMsg.style.display = "block";
-        }
         savedGrid.style.display = "none";
         savedEmpty.style.display = "block";
         return;
     }
 
     try {
-        // Query the favorites table for current user's records
-        const { data: favorites, error: fetchError } = await window.supabaseClient
+        const { data: sessionData } = await window.supabaseClient.auth.getSession();
+        const session = sessionData?.session;
+        currentAuthUser = session?.user || null;
+
+        if (!currentAuthUser) {
+            savedGrid.style.display = "none";
+            savedEmpty.style.display = "block";
+            return;
+        }
+
+        // 1. Query the current user's favorites from public.favorites
+        const { data: favRows, error: favError } = await window.supabaseClient
             .from("favorites")
-            .select("id, aircraft_id, created_at")
-            .eq("user_id", userId)
+            .select("aircraft_id, created_at")
+            .eq("user_id", currentAuthUser.id)
             .order("created_at", { ascending: false });
 
-        if (fetchError) {
-            // If favorites table is not created yet (pure auth stage), show empty state
+        if (favError) {
+            console.error("Error fetching user favorites from Supabase:", favError);
             savedGrid.style.display = "none";
             savedEmpty.style.display = "block";
             return;
         }
 
-        // Handle empty favorites state
-        if (!favorites || favorites.length === 0) {
-            savedGrid.innerHTML = "";
-            savedGrid.style.display = "none";
-            savedEmpty.style.display = "block";
+        // STEP 19: If user has no favorites, display empty state
+        if (!favRows || favRows.length === 0) {
+            renderDashboardFavorites([]);
             return;
         }
 
-        // Render saved aircraft cards
-        savedEmpty.style.display = "none";
-        savedGrid.style.display = "flex";
-        savedGrid.innerHTML = "";
+        // Also sync local Set
+        userFavoriteIds.clear();
+        favRows.forEach(f => userFavoriteIds.add(f.aircraft_id));
 
-        favorites.forEach(function (item) {
-            const key = (item.aircraft_id || "").toLowerCase().trim();
-            const aircraft = aircraftData[key];
+        // 2. Query the matching aircraft records from public.aircraft
+        const favoriteAircraftIds = favRows.map(f => f.aircraft_id);
+        const { data: aircraftData, error: airError } = await window.supabaseClient
+            .from("aircraft")
+            .select("*")
+            .in("id", favoriteAircraftIds);
 
-            if (aircraft) {
-                const card = document.createElement("article");
-                card.className = "aircraft-card";
-                card.id = `saved-card-${key}`;
-                card.setAttribute("data-aircraft-id", key);
+        if (airError) {
+            console.error("Error fetching favorite aircraft platforms:", airError);
+            renderDashboardFavorites([]);
+            return;
+        }
 
-                // Optional special label badge (e.g., Fictional Concept, Historic, High Value)
-                let labelHtml = "";
-                if (aircraft.label && aircraft.label.trim() !== "") {
-                    labelHtml = `<p class="special-label ${aircraft.labelClass || ''}">${aircraft.label}</p>`;
-                }
+        // Keep order matching the favorites created_at order
+        const aircraftMap = new Map();
+        (aircraftData || []).forEach(a => aircraftMap.set(a.id, a));
 
-                card.innerHTML = `
-                    <figure>
-                        <img src="${aircraft.image}" alt="${aircraft.name}">
-                        <figcaption>${aircraft.name}</figcaption>
-                    </figure>
-                    <h3>${aircraft.name}</h3>
-                    <p class="aircraft-category"><strong>Category:</strong> ${aircraft.category}</p>
-                    ${labelHtml}
-                    <p class="aircraft-desc">${aircraft.description}</p>
-                    <div class="saved-card-actions">
-                        <a href="aircraft-details.html?aircraft=${key}" class="btn-card">View Details</a>
-                        <button type="button" class="btn-remove-favorite" data-aircraft-id="${key}">Remove</button>
-                    </div>
-                `;
-
-                // Attach Remove event handler
-                const removeBtn = card.querySelector(".btn-remove-favorite");
-                if (removeBtn) {
-                    removeBtn.addEventListener("click", function () {
-                        removeFavoriteAircraft(key, card);
-                    });
-                }
-
-                savedGrid.appendChild(card);
+        const orderedAircraft = [];
+        favoriteAircraftIds.forEach(id => {
+            if (aircraftMap.has(id)) {
+                orderedAircraft.push(aircraftMap.get(id));
             }
         });
 
-        // If records were in table but none matched local dataset
-        if (savedGrid.children.length === 0) {
-            savedGrid.style.display = "none";
-            savedEmpty.style.display = "block";
-        }
+        renderDashboardFavorites(orderedAircraft);
 
     } catch (err) {
-        console.error("Error in loadUserSavedAircraft:", err);
+        console.error("Unexpected error in loadDashboardFavorites:", err);
         savedGrid.style.display = "none";
         savedEmpty.style.display = "block";
     }
 }
 
 /**
- * Removes a saved aircraft from the Supabase `favorites` table and updates the dashboard view.
- *
- * @param {string} aircraftId - The lowercase identifier of the aircraft (e.g. "f35").
- * @param {HTMLElement} cardElement - The DOM card element to remove.
+ * STEP 19: Renders favorite aircraft cards onto dashboard.html.
  */
-async function removeFavoriteAircraft(aircraftId, cardElement) {
-    if (!window.supabaseClient) return;
+function renderDashboardFavorites(favoriteAircraftList) {
+    const savedGrid = document.getElementById("savedAircraftGrid");
+    const savedEmpty = document.getElementById("savedAircraftEmpty");
+
+    if (!savedGrid || !savedEmpty) return;
+
+    if (!favoriteAircraftList || favoriteAircraftList.length === 0) {
+        savedGrid.innerHTML = "";
+        savedGrid.style.display = "none";
+        savedEmpty.style.display = "block";
+        return;
+    }
+
+    savedEmpty.style.display = "none";
+    savedGrid.style.display = "flex";
+    savedGrid.innerHTML = "";
+
+    favoriteAircraftList.forEach(function (aircraft) {
+        const card = document.createElement("article");
+        card.className = "aircraft-card";
+        card.id = `fav-card-${aircraft.id}`;
+        card.setAttribute("data-aircraft-id", aircraft.id);
+
+        let specialBadgeHtml = "";
+        if (aircraft.is_fictional === true) {
+            specialBadgeHtml = `<p class="special-label label-fictional">FICTIONAL CONCEPT</p>`;
+        } else if (aircraft.status === "Historic Aircraft") {
+            specialBadgeHtml = `<p class="special-label label-historic">Historic Aircraft</p>`;
+        } else if (aircraft.status === "HIGH VALUE") {
+            specialBadgeHtml = `<p class="special-label label-high-value">HIGH VALUE</p>`;
+        } else if (aircraft.status === "Special Mission") {
+            specialBadgeHtml = `<p class="special-label label-special-mission">Special Mission</p>`;
+        }
+
+        const imageHtml = aircraft.image ? `
+            <figure>
+                <img src="${escapeHtml(aircraft.image)}" alt="${escapeHtml(aircraft.name)}">
+                <figcaption>${escapeHtml(aircraft.name)}</figcaption>
+            </figure>
+        ` : `
+            <figure>
+                <div style="height: 200px; display: flex; align-items: center; justify-content: center; background-color: #0b1728; color: #94a3b8; font-size: 14px;">
+                    No Image Available
+                </div>
+                <figcaption>${escapeHtml(aircraft.name)}</figcaption>
+            </figure>
+        `;
+
+        card.innerHTML = `
+            ${imageHtml}
+            <h3>${escapeHtml(aircraft.name)}</h3>
+            <p class="aircraft-category"><strong>Category:</strong> ${escapeHtml(aircraft.category)}</p>
+            <p class="aircraft-status"><strong>Status:</strong> ${escapeHtml(aircraft.status)}</p>
+            ${specialBadgeHtml}
+            <p class="aircraft-desc">${escapeHtml(aircraft.description || "")}</p>
+            <div class="saved-card-actions">
+                <a href="aircraft-details.html?id=${encodeURIComponent(aircraft.id)}" class="btn-card">View Details</a>
+                <button type="button" class="btn-remove-favorite" data-aircraft-id="${aircraft.id}">Remove Favorite</button>
+            </div>
+        `;
+
+        // STEP 21: Attach Remove Favorite event handler
+        const removeBtn = card.querySelector(".btn-remove-favorite");
+        if (removeBtn) {
+            removeBtn.addEventListener("click", function () {
+                removeDashboardFavorite(aircraft.id, card);
+            });
+        }
+
+        savedGrid.appendChild(card);
+    });
+}
+
+/**
+ * STEP 21: Removes a favorite from the dashboard without full page reload.
+ */
+async function removeDashboardFavorite(aircraftId, cardElement) {
+    if (!window.supabaseClient || !aircraftId) return;
 
     const favMsg = document.getElementById("favoritesMessage");
-    const removeBtn = cardElement.querySelector(".btn-remove-favorite");
+    const removeBtn = cardElement ? cardElement.querySelector(".btn-remove-favorite") : null;
 
     if (removeBtn) {
         removeBtn.disabled = true;
@@ -1725,41 +2170,45 @@ async function removeFavoriteAircraft(aircraftId, cardElement) {
     }
 
     try {
-        // Verify current authenticated session
-        const { data: authData } = await window.supabaseClient.auth.getSession();
-        const user = authData && authData.session && authData.session.user;
+        const { data: sessionData } = await window.supabaseClient.auth.getSession();
+        const session = sessionData?.session;
+        currentAuthUser = session?.user || null;
 
-        if (!user) {
+        if (!currentAuthUser) {
             window.location.href = "signin.html";
             return;
         }
 
-        // Delete the row from Supabase favorites table
+        // Delete from public.favorites for current user
         const { error: deleteError } = await window.supabaseClient
             .from("favorites")
             .delete()
-            .eq("user_id", user.id)
+            .eq("user_id", currentAuthUser.id)
             .eq("aircraft_id", aircraftId);
 
         if (deleteError) {
-            console.error("Failed to delete favorite:", deleteError);
-            if (favMsg) {
-                favMsg.textContent = "Failed to remove favorite: " + deleteError.message;
-                favMsg.className = "favorites-message-box error-msg";
-                favMsg.style.display = "block";
-            }
+            console.error("Failed to delete favorite from dashboard:", deleteError);
             if (removeBtn) {
                 removeBtn.disabled = false;
-                removeBtn.textContent = "Remove";
+                removeBtn.textContent = "Remove Favorite";
+            }
+            if (favMsg) {
+                favMsg.textContent = "Unable to update favorites. Please try again.";
+                favMsg.className = "favorites-message-box error-msg";
+                favMsg.style.display = "block";
             }
             return;
         }
 
-        // Remove card element from DOM without page reload
-        cardElement.remove();
+        // Remove card from DOM without refreshing the page
+        if (cardElement) {
+            cardElement.remove();
+        }
+
+        userFavoriteIds.delete(aircraftId);
 
         if (favMsg) {
-            favMsg.textContent = "Aircraft removed from your saved list.";
+            favMsg.textContent = "Aircraft removed from favorites.";
             favMsg.className = "favorites-message-box success-msg";
             favMsg.style.display = "block";
             setTimeout(function () {
@@ -1769,7 +2218,7 @@ async function removeFavoriteAircraft(aircraftId, cardElement) {
             }, 3000);
         }
 
-        // Update empty state if no favorites remain
+        // STEP 21: Update empty state if the last favorite was removed
         const savedGrid = document.getElementById("savedAircraftGrid");
         const savedEmpty = document.getElementById("savedAircraftEmpty");
         if (savedGrid && savedEmpty) {
@@ -1781,11 +2230,26 @@ async function removeFavoriteAircraft(aircraftId, cardElement) {
         }
 
     } catch (err) {
-        console.error("Error in removeFavoriteAircraft:", err);
+        console.error("Unexpected error in removeDashboardFavorite:", err);
         if (removeBtn) {
             removeBtn.disabled = false;
-            removeBtn.textContent = "Remove";
+            removeBtn.textContent = "Remove Favorite";
         }
     }
 }
+
+/**
+ * Backwards compatibility alias for dashboard loading.
+ */
+async function loadUserSavedAircraft(userId) {
+    await loadDashboardFavorites();
+}
+
+/**
+ * Backwards compatibility alias for dashboard removal.
+ */
+async function removeFavoriteAircraft(aircraftId, cardElement) {
+    await removeDashboardFavorite(aircraftId, cardElement);
+}
+
 
