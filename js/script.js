@@ -337,7 +337,15 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // ======================================================================
-    // 6. Dynamic Aircraft Details Page (aircraft-details.html)
+    // 6. Dynamic Aircraft Collection Page (aircraft.html)
+    // ======================================================================
+    const aircraftGrid = document.getElementById("aircraftGrid");
+    if (aircraftGrid) {
+        loadAircraftCollection();
+    }
+
+    // ======================================================================
+    // 7. Dynamic Aircraft Details Page (aircraft-details.html)
     // ======================================================================
     const aircraftDetailsContainer = document.getElementById("aircraftDetailsContainer");
     if (aircraftDetailsContainer) {
@@ -345,10 +353,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // ======================================================================
-    // 7. Aircraft Search and Category Filtering (aircraft.html)
+    // 8. Aircraft Search and Category Filtering (aircraft.html)
     // ======================================================================
     const aircraftSearchInput = document.getElementById("aircraftSearch");
-    if (aircraftSearchInput) {
+    if (aircraftSearchInput && !aircraftGrid) {
         initAircraftFilters();
     }
 
@@ -909,11 +917,252 @@ const aircraftData = {
     }
 };
 
+// ==========================================================================
+// Aircraft Collection State (STEP 6 & 24)
+// Stores loaded aircraft once from Supabase in memory.
+// All search and category filtering operates locally on this array.
+// ==========================================================================
+let allAircraft = [];
+
 /**
- * Reads URL search parameter 'aircraft' and dynamically populates aircraft-details.html.
- * Handles missing and invalid aircraft parameters with clean fallback views.
+ * STEP 2 & 24: Connect aircraft.html to Supabase.
+ * Loads the aircraft collection once from public.aircraft using window.supabaseClient.
+ * Stores data in allAircraft array, sets up event listeners, and renders initial collection.
+ * Handles loading state (STEP 20) and friendly error handling (STEP 21).
  */
-function loadAircraftDetailsPage() {
+async function loadAircraftCollection() {
+    const aircraftGrid = document.getElementById("aircraftGrid");
+    const loadingEl = document.getElementById("aircraftLoading");
+    const errorEl = document.getElementById("aircraftErrorMessage");
+    const countDisplay = document.getElementById("aircraftCount");
+    const noResultsMsg = document.getElementById("noResultsMessage");
+
+    if (!aircraftGrid) return;
+
+    // STEP 20: Loading State — Page loads -> Loading aircraft... -> Supabase request
+    if (loadingEl) loadingEl.style.display = "block";
+    if (errorEl) {
+        errorEl.style.display = "none";
+        errorEl.textContent = "";
+    }
+    if (countDisplay) countDisplay.textContent = "Loading aircraft...";
+    if (noResultsMsg) noResultsMsg.style.display = "none";
+
+    // Ensure Supabase client is available
+    if (!window.supabaseClient) {
+        console.error("Supabase client is not available. Ensure @supabase/supabase-js and js/supabase.js are loaded.");
+        if (loadingEl) loadingEl.style.display = "none";
+        if (errorEl) {
+            errorEl.textContent = "Unable to load aircraft information. Please try again later.";
+            errorEl.style.display = "block";
+        }
+        if (countDisplay) countDisplay.textContent = "";
+        return;
+    }
+
+    try {
+        // STEP 2: Query Supabase public.aircraft ordered by name ONCE
+        const { data: aircraftList, error } = await window.supabaseClient
+            .from("aircraft")
+            .select("*")
+            .order("name");
+
+        // STEP 21: Error handling — friendly message to user, technical error logged to console
+        if (error) {
+            console.error("Error loading aircraft collection from Supabase:", error);
+            if (loadingEl) loadingEl.style.display = "none";
+            if (errorEl) {
+                errorEl.textContent = "Unable to load aircraft information. Please try again later.";
+                errorEl.style.display = "block";
+            }
+            if (countDisplay) countDisplay.textContent = "";
+            return;
+        }
+
+        // Hide loading indicator
+        if (loadingEl) loadingEl.style.display = "none";
+
+        // STEP 6: Store loaded aircraft in JavaScript array
+        allAircraft = aircraftList || [];
+
+        // STEP 17, 18, 19: Set up search and filter event listeners
+        initAircraftFilters();
+
+        // Render initial view with all loaded aircraft
+        filterAircraft();
+
+    } catch (err) {
+        console.error("Unexpected error in loadAircraftCollection:", err);
+        if (loadingEl) loadingEl.style.display = "none";
+        if (errorEl) {
+            errorEl.textContent = "Unable to load aircraft information. Please try again later.";
+            errorEl.style.display = "block";
+        }
+        if (countDisplay) countDisplay.textContent = "";
+    }
+}
+
+/**
+ * STEP 7, 8, 9, 10: Filter aircraft collection.
+ * 1. Reads the search input (case-insensitive, partial match on aircraft.name).
+ * 2. Reads the selected category.
+ * 3. Filters allAircraft using Array.filter().
+ * 4. Passes matching aircraft to renderAircraft().
+ */
+function filterAircraft() {
+    const searchInput = document.getElementById("aircraftSearch");
+    const categorySelect = document.getElementById("aircraftCategory") || document.getElementById("categoryFilter");
+
+    const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : "";
+    const selectedCategory = categorySelect ? categorySelect.value : "All Aircraft";
+
+    // STEP 7: Use JavaScript Array.filter() on the stored allAircraft array
+    const filtered = allAircraft.filter(function (aircraft) {
+        // STEP 8: Search logic against aircraft.name (case-insensitive partial-match)
+        const name = (aircraft.name || "").toLowerCase();
+        const matchesSearch = (searchTerm === "") || name.includes(searchTerm);
+
+        // STEP 9: Category logic (matches selected category or shows all)
+        const matchesCategory = (selectedCategory === "All Aircraft") || (aircraft.category === selectedCategory);
+
+        // STEP 10: Aircraft must satisfy BOTH conditions
+        return matchesSearch && matchesCategory;
+    });
+
+    // STEP 13: Render matching aircraft
+    renderAircraft(filtered);
+}
+
+/**
+ * STEP 13 — Render function responsible for displaying aircraft cards.
+ * 1. Clears existing grid.
+ * 2. Updates result count (STEP 11).
+ * 3. Shows no-results message if 0 matches (STEP 12).
+ * 4. Loops through filtered aircraft and creates cards using existing design (STEP 14, 15, 16).
+ */
+function renderAircraft(aircraftList) {
+    const aircraftGrid = document.getElementById("aircraftGrid");
+    const countDisplay = document.getElementById("aircraftCount");
+    const noResultsMsg = document.getElementById("noResultsMessage");
+
+    if (!aircraftGrid) return;
+
+    const count = aircraftList ? aircraftList.length : 0;
+
+    // STEP 11: Display result counter
+    // Examples: "10 aircraft found", "3 aircraft found", "1 aircraft found", "0 aircraft found"
+    if (countDisplay) {
+        countDisplay.textContent = `${count} aircraft found`;
+    }
+
+    // STEP 12: No Results Message
+    if (count === 0) {
+        aircraftGrid.innerHTML = `
+            <div class="notice-box" style="text-align: center; padding: 40px 20px; grid-column: 1 / -1; width: 100%;">
+                <p style="margin: 0; font-size: 16px; font-weight: bold; color: #b91c1c;">No aircraft found.</p>
+                <p style="margin: 8px 0 0 0; color: #64748b; font-size: 14px;">Try changing your search or category filter.</p>
+            </div>
+        `;
+        if (noResultsMsg) {
+            noResultsMsg.textContent = "No aircraft found. Try changing your search or category filter.";
+            noResultsMsg.style.display = "block";
+        }
+        return;
+    }
+
+    // Hide no-results banner when matches exist
+    if (noResultsMsg) {
+        noResultsMsg.style.display = "none";
+    }
+
+    // Clear existing grid
+    aircraftGrid.innerHTML = "";
+
+    // STEP 13 & 14: Loop through filtered aircraft and create cards
+    aircraftList.forEach(function (aircraft) {
+        const card = document.createElement("article");
+        card.className = "aircraft-card";
+        card.setAttribute("data-name", aircraft.name || "");
+        card.setAttribute("data-category", aircraft.category || "");
+
+        // STEP 16: Clear visual label for fictional aircraft (SR-71 Darkstar)
+        let specialBadgeHtml = "";
+        if (aircraft.is_fictional === true) {
+            specialBadgeHtml = `<p class="special-label label-fictional">FICTIONAL CONCEPT</p>`;
+        } else if (aircraft.status === "Historic Aircraft") {
+            specialBadgeHtml = `<p class="special-label label-historic">Historic Aircraft</p>`;
+        } else if (aircraft.status === "HIGH VALUE") {
+            specialBadgeHtml = `<p class="special-label label-high-value">HIGH VALUE</p>`;
+        } else if (aircraft.status === "Special Mission") {
+            specialBadgeHtml = `<p class="special-label label-special-mission">Special Mission</p>`;
+        }
+
+        // Relative image path & meaningful alt text
+        const imageHtml = aircraft.image ? `
+            <figure>
+                <img src="${escapeHtml(aircraft.image)}" alt="${escapeHtml(aircraft.name)}">
+                <figcaption>${escapeHtml(aircraft.name)}</figcaption>
+            </figure>
+        ` : `
+            <figure>
+                <div style="height: 200px; display: flex; align-items: center; justify-content: center; background-color: #0b1728; color: #94a3b8; font-size: 14px;">
+                    No Image Available
+                </div>
+                <figcaption>${escapeHtml(aircraft.name)}</figcaption>
+            </figure>
+        `;
+
+        // STEP 14 & 15: Display image, name, category, status, description, and View Details button with actual UUID
+        card.innerHTML = `
+            ${imageHtml}
+            <h3>${escapeHtml(aircraft.name)}</h3>
+            <p class="aircraft-category"><strong>Category:</strong> ${escapeHtml(aircraft.category)}</p>
+            <p class="aircraft-status"><strong>Status:</strong> ${escapeHtml(aircraft.status)}</p>
+            ${specialBadgeHtml}
+            <p class="aircraft-desc">${escapeHtml(aircraft.description || "")}</p>
+            <a href="aircraft-details.html?id=${encodeURIComponent(aircraft.id)}" class="btn-card">View Details</a>
+        `;
+
+        aircraftGrid.appendChild(card);
+    });
+}
+
+/**
+ * STEP 17, 18, 19: Sets up event listeners for search input, category dropdown, and clear button.
+ */
+function initAircraftFilters() {
+    const searchInput = document.getElementById("aircraftSearch");
+    const categorySelect = document.getElementById("aircraftCategory") || document.getElementById("categoryFilter");
+    const clearBtn = document.getElementById("clearFilters") || document.getElementById("resetFilters");
+
+    if (searchInput) {
+        // STEP 17: Search event — real-time filtering as user types without requiring Enter
+        searchInput.oninput = filterAircraft;
+    }
+
+    if (categorySelect) {
+        // STEP 18: Category event — filters on dropdown selection change
+        categorySelect.onchange = filterAircraft;
+    }
+
+    if (clearBtn) {
+        // STEP 5 & 19: Clear Filters event — resets input and dropdown, re-renders all aircraft
+        clearBtn.onclick = function () {
+            if (searchInput) searchInput.value = "";
+            if (categorySelect) categorySelect.value = "All Aircraft";
+            filterAircraft();
+            if (searchInput) searchInput.focus();
+        };
+    }
+}
+
+
+/**
+ * STEP 15 & 16: Reads URL search parameter 'id' using URLSearchParams,
+ * queries public.aircraft for that specific aircraft ID, and populates aircraft-details.html.
+ * Handles missing/invalid IDs (STEP 17), loading state (STEP 18), and error handling (STEP 19).
+ */
+async function loadAircraftDetailsPage() {
     const detailsContainer = document.getElementById("aircraftDetailsContainer");
     const errorContainer = document.getElementById("aircraftErrorContainer");
     const errorMessage = document.getElementById("aircraftErrorMessage");
@@ -922,32 +1171,31 @@ function loadAircraftDetailsPage() {
 
     if (!detailsContainer || !errorContainer) return;
 
-    // Retrieve aircraft query parameter from current URL
+    // STEP 15: Retrieve 'id' parameter from current URL (with fallback to 'aircraft')
     const params = new URLSearchParams(window.location.search);
-    const aircraftParam = params.get("aircraft");
+    const aircraftId = params.get("id");
+    const aircraftSlug = params.get("aircraft");
 
-    // Scenario 1: No parameter provided in URL
-    if (!aircraftParam || aircraftParam.trim() === "") {
+    // Slug mapping for backwards compatibility with legacy query params
+    const slugMap = {
+        f35: "F-35 Lightning II",
+        f22: "F-22 Raptor",
+        f16: "F-16 Fighting Falcon",
+        f117: "F-117 Nighthawk",
+        sr71: "SR-71 Blackbird",
+        darkstar: "SR-71 Darkstar",
+        c5: "C-5 Galaxy",
+        c130: "C-130 Hercules",
+        ch53k: "CH-53K King Stallion",
+        vh92: "VH-92 Patriot"
+    };
+
+    // STEP 17: Scenario 1 — If the URL does not contain an aircraft ID
+    if ((!aircraftId || aircraftId.trim() === "") && (!aircraftSlug || aircraftSlug.trim() === "")) {
         detailsContainer.style.display = "none";
         errorContainer.style.display = "block";
-        if (errorMessage) errorMessage.textContent = "Aircraft not selected.";
-        if (errorText) errorText.textContent = "Please select an aircraft from our collection to view its full specifications and details.";
-        if (errorBtn) {
-            errorBtn.textContent = "View Aircraft Collection";
-            errorBtn.href = "aircraft.html";
-        }
-        return;
-    }
-
-    const aircraftKey = aircraftParam.trim().toLowerCase();
-    const aircraft = aircraftData[aircraftKey];
-
-    // Scenario 2: Invalid aircraft ID entered in URL
-    if (!aircraft) {
-        detailsContainer.style.display = "none";
-        errorContainer.style.display = "block";
-        if (errorMessage) errorMessage.textContent = "Aircraft information could not be found.";
-        if (errorText) errorText.textContent = `The aircraft ID "${aircraftParam}" was not found in our collection. Please return to the aircraft catalog.`;
+        if (errorMessage) errorMessage.textContent = "Aircraft not found.";
+        if (errorText) errorText.textContent = "No aircraft was selected. Please return to the aircraft collection.";
         if (errorBtn) {
             errorBtn.textContent = "Back to Aircraft";
             errorBtn.href = "aircraft.html";
@@ -955,189 +1203,191 @@ function loadAircraftDetailsPage() {
         return;
     }
 
-    // Scenario 3: Valid aircraft found -> Render aircraft details
-    detailsContainer.style.display = "block";
-    errorContainer.style.display = "none";
+    // STEP 17: Scenario 2 — Non-UUID / Invalid aircraft ID in URL
+    const isUuid = aircraftId ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(aircraftId.trim()) : false;
+    const isKnownSlug = aircraftSlug ? Boolean(slugMap[aircraftSlug.trim().toLowerCase()]) : false;
 
-    // Update document title for educational clarity
-    document.title = `${aircraft.name} - Aircraft Details`;
-
-    // 1. Image and Figure Caption
-    const aircraftImage = document.getElementById("aircraftImage");
-    const aircraftCaption = document.getElementById("aircraftCaption");
-    if (aircraftImage) {
-        aircraftImage.src = aircraft.image;
-        aircraftImage.alt = `${aircraft.name} photograph`;
-    }
-    if (aircraftCaption) {
-        aircraftCaption.textContent = aircraft.caption || aircraft.name;
-    }
-
-    // 2. Aircraft Name Heading
-    const aircraftName = document.getElementById("aircraftName");
-    if (aircraftName) {
-        aircraftName.textContent = aircraft.name;
-    }
-
-    // 3. Special Label (Historic, High Value, Fictional Concept, Special Mission)
-    const aircraftSpecialLabel = document.getElementById("aircraftSpecialLabel");
-    if (aircraftSpecialLabel) {
-        if (aircraft.label && aircraft.label.trim() !== "") {
-            aircraftSpecialLabel.textContent = aircraft.label;
-            aircraftSpecialLabel.className = "special-label " + (aircraft.labelClass || "");
-            aircraftSpecialLabel.style.display = "inline-block";
-        } else {
-            aircraftSpecialLabel.style.display = "none";
+    if (!isUuid && !isKnownSlug) {
+        detailsContainer.style.display = "none";
+        errorContainer.style.display = "block";
+        if (errorMessage) errorMessage.textContent = "Aircraft not found.";
+        if (errorText) errorText.textContent = "The requested aircraft ID could not be found in our collection.";
+        if (errorBtn) {
+            errorBtn.textContent = "Back to Aircraft";
+            errorBtn.href = "aircraft.html";
         }
-    }
-
-    // 4. Category, Role, and Status Items
-    const aircraftCategory = document.getElementById("aircraftCategory");
-    if (aircraftCategory) {
-        aircraftCategory.innerHTML = `<strong>Category:</strong> ${aircraft.category}`;
-    }
-
-    const aircraftRole = document.getElementById("aircraftRole");
-    if (aircraftRole) {
-        aircraftRole.innerHTML = `<strong>Role:</strong> ${aircraft.role}`;
-    }
-
-    const aircraftStatus = document.getElementById("aircraftStatus");
-    if (aircraftStatus) {
-        aircraftStatus.innerHTML = `<strong>Status:</strong> ${aircraft.status}`;
-    }
-
-    // 5. Educational Description
-    const aircraftDescription = document.getElementById("aircraftDescription");
-    if (aircraftDescription) {
-        aircraftDescription.textContent = aircraft.description;
-    }
-
-    // 6. Platform Specifications Table
-    const specsBody = document.getElementById("aircraftSpecsBody");
-    if (specsBody && aircraft.specs) {
-        specsBody.innerHTML = "";
-        for (const [key, value] of Object.entries(aircraft.specs)) {
-            const row = document.createElement("tr");
-            const th = document.createElement("th");
-            th.textContent = key;
-            const td = document.createElement("td");
-            td.textContent = value;
-            row.appendChild(th);
-            row.appendChild(td);
-            specsBody.appendChild(row);
-        }
-    }
-}
-
-/**
- * Initializes real-time search, category filtering, and filter reset for aircraft.html.
- * Preserves category sections, updates result counters, and handles zero-result states.
- */
-function initAircraftFilters() {
-    const searchInput = document.getElementById("aircraftSearch");
-    const categorySelect = document.getElementById("categoryFilter");
-    const resetBtn = document.getElementById("resetFilters");
-    const countDisplay = document.getElementById("aircraftCount");
-    const noResultsMsg = document.getElementById("noResultsMessage");
-    const aircraftCards = document.querySelectorAll(".aircraft-card");
-    const categorySections = document.querySelectorAll(".aircraft-category-section");
-
-    if (!searchInput || !categorySelect || aircraftCards.length === 0) {
         return;
     }
 
-    /**
-     * Filters cards based on active search input and selected category dropdown.
-     */
-    function filterAircraft() {
-        const searchTerm = searchInput.value.trim().toLowerCase();
-        const selectedCategory = categorySelect.value;
-        const cleanSearch = searchTerm.replace(/[-\s]/g, "");
+    // STEP 18: Loading State
+    detailsContainer.style.display = "block";
+    errorContainer.style.display = "none";
 
-        let visibleCount = 0;
+    const aircraftNameEl = document.getElementById("aircraftName");
+    const aircraftDescEl = document.getElementById("aircraftDescription");
+    const aircraftCategoryEl = document.getElementById("aircraftCategory");
+    const aircraftStatusEl = document.getElementById("aircraftStatus");
+    const aircraftSpecialLabel = document.getElementById("aircraftSpecialLabel");
+    const aircraftImage = document.getElementById("aircraftImage");
+    const aircraftCaption = document.getElementById("aircraftCaption");
 
-        aircraftCards.forEach(function (card) {
-            const cardName = (card.getAttribute("data-name") || card.querySelector("h3")?.textContent || "").toLowerCase();
-            const cardCategory = (card.getAttribute("data-category") || "").toLowerCase();
-            const cardText = card.textContent.toLowerCase();
-            const cleanName = cardName.replace(/[-\s]/g, "");
+    if (aircraftNameEl) aircraftNameEl.textContent = "Loading aircraft...";
+    if (aircraftCategoryEl) aircraftCategoryEl.innerHTML = "<strong>Category:</strong> Loading...";
+    if (aircraftStatusEl) aircraftStatusEl.innerHTML = "<strong>Status:</strong> Loading...";
+    if (aircraftDescEl) aircraftDescEl.textContent = "Loading aircraft description...";
+    if (aircraftSpecialLabel) aircraftSpecialLabel.style.display = "none";
 
-            // 1. Search Query Evaluation (Matches name, category, card text, or normalized string like "f22" -> "f-22")
-            const matchesSearch = (searchTerm === "") ||
-                cardName.includes(searchTerm) ||
-                cardCategory.includes(searchTerm) ||
-                cardText.includes(searchTerm) ||
-                (cleanSearch.length > 0 && cleanName.includes(cleanSearch));
+    // STEP 20: Ensure Supabase client is available
+    if (!window.supabaseClient) {
+        console.error("Supabase client is not available. Please verify js/supabase.js.");
+        detailsContainer.style.display = "none";
+        errorContainer.style.display = "block";
+        if (errorMessage) errorMessage.textContent = "Unable to load aircraft information.";
+        if (errorText) errorText.textContent = "Unable to load aircraft information. Please try again later.";
+        return;
+    }
 
-            // 2. Category Dropdown Evaluation
-            const matchesCategory = (selectedCategory === "All Aircraft") ||
-                (cardCategory === selectedCategory.toLowerCase());
+    try {
+        // STEP 15: Build query for this specific aircraft
+        let query = window.supabaseClient.from("aircraft").select("*");
 
-            // 3. Both criteria must be satisfied simultaneously
-            if (matchesSearch && matchesCategory) {
-                card.style.display = "";
-                visibleCount++;
+        if (aircraftId && aircraftId.trim() !== "") {
+            query = query.eq("id", aircraftId.trim());
+        } else if (aircraftSlug && aircraftSlug.trim() !== "") {
+            const targetName = slugMap[aircraftSlug.trim().toLowerCase()] || aircraftSlug.trim();
+            query = query.eq("name", targetName);
+        }
+
+        const { data: aircraft, error } = await query.maybeSingle();
+
+        // STEP 19 & 17: Error Handling
+        if (error) {
+            console.error("Error fetching aircraft details from Supabase:", error);
+            detailsContainer.style.display = "none";
+            errorContainer.style.display = "block";
+
+            // If error is invalid UUID syntax (e.g. user typed a non-UUID ID in URL)
+            if (error.code === "22P02" || error.code === "PGRST116") {
+                if (errorMessage) errorMessage.textContent = "Aircraft not found.";
+                if (errorText) errorText.textContent = "The requested aircraft could not be found in our collection.";
             } else {
-                card.style.display = "none";
+                if (errorMessage) errorMessage.textContent = "Unable to load aircraft information.";
+                if (errorText) errorText.textContent = "Unable to load aircraft information. Please try again later.";
             }
-        });
-
-        // 4. Update visibility of entire category sections (hide section if 0 visible cards)
-        categorySections.forEach(function (section) {
-            const cardsInSection = section.querySelectorAll(".aircraft-card");
-            let hasVisibleCard = false;
-
-            cardsInSection.forEach(function (card) {
-                if (card.style.display !== "none") {
-                    hasVisibleCard = true;
-                }
-            });
-
-            if (hasVisibleCard) {
-                section.style.display = "";
-            } else {
-                section.style.display = "none";
+            if (errorBtn) {
+                errorBtn.textContent = "Back to Aircraft";
+                errorBtn.href = "aircraft.html";
             }
-        });
+            return;
+        }
 
-        // 5. Update result count display
-        if (countDisplay) {
-            if (visibleCount === 0) {
-                countDisplay.textContent = "No aircraft found";
-            } else if (visibleCount === 1) {
-                countDisplay.textContent = "Showing 1 aircraft";
+        // STEP 17: Scenario 2 — ID exists in URL but aircraft does not exist in database
+        if (!aircraft) {
+            detailsContainer.style.display = "none";
+            errorContainer.style.display = "block";
+            if (errorMessage) errorMessage.textContent = "Aircraft not found.";
+            if (errorText) errorText.textContent = "The requested aircraft could not be found in our collection.";
+            if (errorBtn) {
+                errorBtn.textContent = "Back to Aircraft";
+                errorBtn.href = "aircraft.html";
+            }
+            return;
+        }
+
+        // STEP 16: Render Aircraft Details Page Content
+        detailsContainer.style.display = "block";
+        errorContainer.style.display = "none";
+        document.title = `${aircraft.name} | Aircraft Details`;
+
+        // 1. Aircraft Name
+        if (aircraftNameEl) {
+            aircraftNameEl.textContent = aircraft.name;
+        }
+
+        // 2. STEP 14: Clear visual label for fictional concept
+        if (aircraftSpecialLabel) {
+            if (aircraft.is_fictional === true) {
+                aircraftSpecialLabel.textContent = "FICTIONAL CONCEPT";
+                aircraftSpecialLabel.className = "special-label label-fictional";
+                aircraftSpecialLabel.style.display = "inline-block";
+            } else if (aircraft.status === "Historic Aircraft") {
+                aircraftSpecialLabel.textContent = "Historic Aircraft";
+                aircraftSpecialLabel.className = "special-label label-historic";
+                aircraftSpecialLabel.style.display = "inline-block";
+            } else if (aircraft.status === "HIGH VALUE") {
+                aircraftSpecialLabel.textContent = "HIGH VALUE";
+                aircraftSpecialLabel.className = "special-label label-high-value";
+                aircraftSpecialLabel.style.display = "inline-block";
+            } else if (aircraft.status === "Special Mission") {
+                aircraftSpecialLabel.textContent = "Special Mission";
+                aircraftSpecialLabel.className = "special-label label-special-mission";
+                aircraftSpecialLabel.style.display = "inline-block";
             } else {
-                countDisplay.textContent = `Showing ${visibleCount} aircraft`;
+                aircraftSpecialLabel.style.display = "none";
             }
         }
 
-        // 6. Toggle no-results message
-        if (noResultsMsg) {
-            if (visibleCount === 0) {
-                noResultsMsg.style.display = "block";
+        // 3. Category & Status
+        if (aircraftCategoryEl) {
+            aircraftCategoryEl.innerHTML = `<strong>Category:</strong> ${escapeHtml(aircraft.category)}`;
+        }
+        if (aircraftStatusEl) {
+            aircraftStatusEl.innerHTML = `<strong>Status:</strong> ${escapeHtml(aircraft.status)}`;
+        }
+
+        // 4. Description
+        if (aircraftDescEl) {
+            aircraftDescEl.textContent = aircraft.description || "No description available for this aircraft.";
+        }
+
+        // 5. Image & Caption
+        if (aircraftImage) {
+            if (aircraft.image) {
+                aircraftImage.src = aircraft.image;
+                aircraftImage.alt = aircraft.name;
+                aircraftImage.style.display = "block";
             } else {
-                noResultsMsg.style.display = "none";
+                aircraftImage.style.display = "none";
             }
         }
+        if (aircraftCaption) {
+            aircraftCaption.textContent = aircraft.name;
+        }
+
+        // 6. Platform Specifications Table
+        const specsBody = document.getElementById("aircraftSpecsBody");
+        if (specsBody) {
+            specsBody.innerHTML = `
+                <tr><th>Platform</th><td>${escapeHtml(aircraft.name)}</td></tr>
+                <tr><th>Category</th><td>${escapeHtml(aircraft.category)}</td></tr>
+                <tr><th>Status</th><td>${escapeHtml(aircraft.status)}</td></tr>
+                <tr><th>Classification</th><td>${aircraft.is_fictional ? "Fictional Concept" : "Real-World Aircraft Platform"}</td></tr>
+            `;
+        }
+
+    } catch (err) {
+        console.error("Unexpected error in loadAircraftDetailsPage:", err);
+        detailsContainer.style.display = "none";
+        errorContainer.style.display = "block";
+        if (errorMessage) errorMessage.textContent = "Unable to load aircraft information.";
+        if (errorText) errorText.textContent = "Unable to load aircraft information. Please try again later.";
     }
-
-    // Attach event listeners
-    searchInput.addEventListener("input", filterAircraft);
-    categorySelect.addEventListener("change", filterAircraft);
-
-    if (resetBtn) {
-        resetBtn.addEventListener("click", function () {
-            searchInput.value = "";
-            categorySelect.value = "All Aircraft";
-            filterAircraft();
-            searchInput.focus();
-        });
-    }
-
-    // Run initial filter to set count and state
-    filterAircraft();
 }
+
+
+/**
+ * Escapes special HTML characters to prevent XSS.
+ */
+function escapeHtml(text) {
+    if (text === null || text === undefined) return "";
+    return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 
 // ==========================================================================
 // 8. Favorites / Saved Aircraft Functions

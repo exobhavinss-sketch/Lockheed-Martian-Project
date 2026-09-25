@@ -39,3 +39,4 @@ desktop.ini
 
 # Test / coverage output
 coverage/
+.playwright-mcp/

@@ -51,6 +51,7 @@ Lockheed-Martin-Project/
 ├── images/                 # Aircraft photographs, illustrations, and SVG badges
 │
 ├── database/
+│   ├── aircraft.sql        # Supabase PostgreSQL aircraft catalog schema, RLS & seed data
 │   └── profiles.sql        # Supabase PostgreSQL profiles schema & RLS policies
 │
 ├── .gitignore              # Git ignore rules for clean repository management

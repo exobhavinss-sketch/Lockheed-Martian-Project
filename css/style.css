@@ -357,6 +357,16 @@ a:focus-visible {
     color: #0f172a;
 }
 
+.aircraft-status {
+    font-size: 14px;
+    color: #475569;
+    margin-bottom: 10px;
+}
+
+.aircraft-status strong {
+    color: #0f172a;
+}
+
 /* Special Labels for Highlighted Aircraft */
 .special-label {
     display: inline-block;
