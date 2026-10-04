@@ -270,8 +270,38 @@ document.addEventListener("DOMContentLoaded", function () {
                 }, 1000);
 
             } catch (err) {
-                signinMessage.textContent = "A network error occurred while connecting to Supabase. Please try again.";
-                signinMessage.className = "error-message";
+                console.warn("Supabase connection error on signin:", err);
+                signinMessage.innerHTML = `
+                    <div style="text-align: left;">
+                        <p style="margin: 0 0 8px 0;"><strong>Database Notice:</strong> Unable to connect to Supabase server (the cloud project may be paused in your Supabase dashboard).</p>
+                        <p style="margin: 0 0 8px 0; font-size: 13px;">To use full cloud sync, please unpause your project at <a href="https://supabase.com/dashboard" target="_blank" style="color: #0284c7; text-decoration: underline;">supabase.com</a>.</p>
+                        <p style="margin: 0 0 8px 0; font-size: 13px;">Or click below to continue in <strong>Demo Member Mode</strong> to test the dashboard, favorites, and profile:</p>
+                        <button type="button" id="demoSignInBtn" class="btn-submit" style="display: block; width: 100%; text-align: center; margin-top: 8px; background: #0284c7;">Sign In with Demo Account</button>
+                    </div>
+                `;
+                signinMessage.className = "notice-box";
+                const demoBtn = document.getElementById("demoSignInBtn");
+                if (demoBtn) {
+                    demoBtn.addEventListener("click", function() {
+                        const demoUser = {
+                            id: "00000000-0000-4000-8000-000000000001",
+                            email: email || "student@lockheedmartin.edu",
+                            user_metadata: {
+                                full_name: "Student Member",
+                                username: email ? email.split("@")[0] : "student",
+                                aircraft_interest: "Fighter Aircraft"
+                            },
+                            created_at: new Date().toISOString()
+                        };
+                        localStorage.setItem("lockheed_guest_user", JSON.stringify(demoUser));
+                        currentAuthUser = demoUser;
+                        signinMessage.textContent = "Demo Sign In successful! Redirecting...";
+                        signinMessage.className = "success-message";
+                        setTimeout(function() {
+                            window.location.href = "dashboard.html";
+                        }, 800);
+                    });
+                }
             }
         });
     }
@@ -424,10 +454,18 @@ document.addEventListener("DOMContentLoaded", function () {
  * STEP 12 & 13: Redirects already-authenticated users from signin.html and signup.html directly to dashboard.html.
  */
 async function checkAuthRedirect() {
-    if (!window.supabaseClient) return;
     try {
-        const { data: authData } = await window.supabaseClient.auth.getSession();
-        if (authData && authData.session && authData.session.user) {
+        let user = null;
+        if (window.supabaseClient) {
+            try {
+                const { data: authData } = await window.supabaseClient.auth.getSession();
+                user = authData?.session?.user || null;
+            } catch (e) {}
+        }
+        if (!user && typeof getStoredLocalUser === "function") {
+            user = getStoredLocalUser();
+        }
+        if (user) {
             window.location.href = "dashboard.html";
         }
     } catch (err) {
@@ -647,16 +685,29 @@ async function loadUserProfileDashboard() {
     }
 
     try {
-        // STEP 9: Step 1 — Verify authenticated session using getSession()
-        const { data: authData, error: authError } = await window.supabaseClient.auth.getSession();
+        // STEP 9: Step 1 — Verify authenticated session using getSession() or local stored user
+        let user = null;
+        if (window.supabaseClient) {
+            try {
+                const { data: authData, error: authError } = await window.supabaseClient.auth.getSession();
+                if (!authError && authData && authData.session && authData.session.user) {
+                    user = authData.session.user;
+                }
+            } catch (authErr) {
+                console.warn("Could not check Supabase session, checking local storage:", authErr);
+            }
+        }
+        if (!user && typeof getStoredLocalUser === "function") {
+            user = getStoredLocalUser();
+        }
 
-        if (authError || !authData || !authData.session || !authData.session.user) {
+        if (!user) {
             // Redirect unauthenticated visitors to signin.html
             window.location.href = "signin.html";
             return;
         }
 
-        const user = authData.session.user;
+        currentAuthUser = user;
 
         // STEP 9: Step 2 & 3 — Load current user's profile from public.profiles
         const { profile, error: profileError } = await getOrCreateUserProfile(user);
@@ -1203,17 +1254,98 @@ const aircraftData = {
 };
 
 // ==========================================================================
+// Canonical Aircraft Platform Registry & ID Cross-Resolution
+// Allows seamless cross-referencing between slugs (e.g. 'f16') and UUIDs.
+// ==========================================================================
+const AIRCRAFT_REGISTRY = [
+    { slug: "f35", id: "11111111-1111-4111-8111-111111111101", name: "F-35 Lightning II" },
+    { slug: "f22", id: "11111111-1111-4111-8111-111111111102", name: "F-22 Raptor" },
+    { slug: "f16", id: "11111111-1111-4111-8111-111111111103", name: "F-16 Fighting Falcon" },
+    { slug: "f117", id: "11111111-1111-4111-8111-111111111104", name: "F-117 Nighthawk" },
+    { slug: "sr71", id: "11111111-1111-4111-8111-111111111105", name: "SR-71 Blackbird" },
+    { slug: "darkstar", id: "11111111-1111-4111-8111-111111111106", name: "SR-71 Darkstar" },
+    { slug: "c5", id: "11111111-1111-4111-8111-111111111107", name: "C-5 Galaxy" },
+    { slug: "c130", id: "11111111-1111-4111-8111-111111111108", name: "C-130 Hercules" },
+    { slug: "ch53k", id: "11111111-1111-4111-8111-111111111109", name: "CH-53K King Stallion" },
+    { slug: "vh92", id: "11111111-1111-4111-8111-111111111110", name: "VH-92 Patriot" }
+];
+
+/**
+ * Returns static aircraft platforms matching public.aircraft schema.
+ * Ensures the website works reliably even if Supabase is offline/paused.
+ */
+function getStaticAircraftList() {
+    const list = [];
+    AIRCRAFT_REGISTRY.forEach(function (reg) {
+        const item = aircraftData[reg.slug];
+        if (item) {
+            list.push({
+                id: reg.id,
+                slug: reg.slug,
+                name: item.name,
+                category: item.category,
+                description: item.description,
+                image: item.image,
+                status: item.status.includes("Historic") ? "Historic Aircraft" :
+                        item.status.includes("HIGH VALUE") ? "HIGH VALUE" :
+                        item.status.includes("Fictional") ? "Fictional Concept" :
+                        item.status.includes("Special Mission") ? "Special Mission" : "Active",
+                is_fictional: reg.slug === "darkstar",
+                specs: item.specs || {}
+            });
+        }
+    });
+    return list;
+}
+
+/**
+ * Returns all equivalent identifiers (slug, UUID, name) for a given aircraft identifier.
+ */
+function getEquivalentAircraftIds(idOrSlug) {
+    if (!idOrSlug) return [];
+    const query = String(idOrSlug).trim().toLowerCase();
+    const result = new Set([String(idOrSlug).trim()]);
+
+    const entry = AIRCRAFT_REGISTRY.find(function (a) {
+        return a.slug.toLowerCase() === query ||
+               a.id.toLowerCase() === query ||
+               a.name.toLowerCase() === query;
+    });
+
+    if (entry) {
+        result.add(entry.slug);
+        result.add(entry.id);
+        result.add(entry.name);
+    }
+
+    if (Array.isArray(allAircraft)) {
+        const found = allAircraft.find(function (a) {
+            return (a.id && a.id.toLowerCase() === query) ||
+                   (a.name && a.name.toLowerCase() === query) ||
+                   (a.slug && a.slug.toLowerCase() === query);
+        });
+        if (found) {
+            if (found.id) result.add(found.id);
+            if (found.name) result.add(found.name);
+            if (found.slug) result.add(found.slug);
+        }
+    }
+
+    return Array.from(result);
+}
+
+// ==========================================================================
 // Aircraft Collection State (STEP 6 & 24)
-// Stores loaded aircraft once from Supabase in memory.
+// Stores loaded aircraft once from Supabase in memory (with local fallback).
 // All search and category filtering operates locally on this array.
 // ==========================================================================
 let allAircraft = [];
 
 /**
- * STEP 2 & 24: Connect aircraft.html to Supabase.
- * Loads the aircraft collection once from public.aircraft using window.supabaseClient.
- * Stores data in allAircraft array, sets up event listeners, and renders initial collection.
- * Handles loading state (STEP 20) and friendly error handling (STEP 21).
+ * STEP 2 & 24: Connect aircraft.html to Supabase with resilient local fallback.
+ * Loads the aircraft collection from public.aircraft using window.supabaseClient.
+ * If Supabase is unreachable (e.g. paused free tier or network issue), falls back
+ * automatically to the local static aircraft catalog so the collection is always visible.
  */
 async function loadAircraftCollection() {
     const aircraftGrid = document.getElementById("aircraftGrid");
@@ -1224,7 +1356,6 @@ async function loadAircraftCollection() {
 
     if (!aircraftGrid) return;
 
-    // STEP 20: Loading State — Page loads -> Loading aircraft... -> Supabase request
     if (loadingEl) loadingEl.style.display = "block";
     if (errorEl) {
         errorEl.style.display = "none";
@@ -1233,61 +1364,42 @@ async function loadAircraftCollection() {
     if (countDisplay) countDisplay.textContent = "Loading aircraft...";
     if (noResultsMsg) noResultsMsg.style.display = "none";
 
-    // Ensure Supabase client is available
-    if (!window.supabaseClient) {
-        console.error("Supabase client is not available. Ensure @supabase/supabase-js and js/supabase.js are loaded.");
-        if (loadingEl) loadingEl.style.display = "none";
-        if (errorEl) {
-            errorEl.textContent = "Unable to load aircraft information. Please try again later.";
-            errorEl.style.display = "block";
-        }
-        if (countDisplay) countDisplay.textContent = "";
-        return;
-    }
+    let aircraftList = null;
 
-    try {
-        // STEP 2: Query Supabase public.aircraft ordered by name ONCE
-        const { data: aircraftList, error } = await window.supabaseClient
-            .from("aircraft")
-            .select("*")
-            .order("name");
+    if (window.supabaseClient) {
+        try {
+            const { data, error } = await window.supabaseClient
+                .from("aircraft")
+                .select("*")
+                .order("name");
 
-        // STEP 21: Error handling — friendly message to user, technical error logged to console
-        if (error) {
-            console.error("Error loading aircraft collection from Supabase:", error);
-            if (loadingEl) loadingEl.style.display = "none";
-            if (errorEl) {
-                errorEl.textContent = "Unable to load aircraft information. Please try again later.";
-                errorEl.style.display = "block";
+            if (!error && data && data.length > 0) {
+                aircraftList = data;
+            } else if (error) {
+                console.warn("Could not load aircraft from Supabase, using local catalog fallback:", error.message || error);
             }
-            if (countDisplay) countDisplay.textContent = "";
-            return;
+        } catch (fetchErr) {
+            console.warn("Supabase connection error loading aircraft collection, using local catalog fallback:", fetchErr);
         }
-
-        // Hide loading indicator
-        if (loadingEl) loadingEl.style.display = "none";
-
-        // STEP 6: Store loaded aircraft in JavaScript array
-        allAircraft = aircraftList || [];
-
-        // STEP 12 & 13: Load current user's favorites from Supabase public.favorites
-        await loadUserFavorites();
-
-        // STEP 17, 18, 19: Set up search and filter event listeners
-        initAircraftFilters();
-
-        // Render initial view with all loaded aircraft
-        filterAircraft();
-
-    } catch (err) {
-        console.error("Unexpected error in loadAircraftCollection:", err);
-        if (loadingEl) loadingEl.style.display = "none";
-        if (errorEl) {
-            errorEl.textContent = "Unable to load aircraft information. Please try again later.";
-            errorEl.style.display = "block";
-        }
-        if (countDisplay) countDisplay.textContent = "";
     }
+
+    // Resilient local fallback so users always see the aircraft platforms
+    if (!aircraftList || aircraftList.length === 0) {
+        aircraftList = getStaticAircraftList();
+    }
+
+    if (loadingEl) loadingEl.style.display = "none";
+
+    allAircraft = aircraftList || [];
+
+    // STEP 12 & 13: Load current user's favorites
+    await loadUserFavorites();
+
+    // STEP 17, 18, 19: Set up search and filter event listeners
+    initAircraftFilters();
+
+    // Render initial view with all loaded aircraft
+    filterAircraft();
 }
 
 /**
@@ -1413,7 +1525,7 @@ function renderAircraft(aircraftList) {
             ${specialBadgeHtml}
             <p class="aircraft-desc">${escapeHtml(aircraft.description || "")}</p>
             <div class="card-action-row">
-                <a href="aircraft-details.html?id=${encodeURIComponent(aircraft.id)}" class="btn-card">View Details</a>
+                <a href="aircraft-details.html?id=${encodeURIComponent(aircraft.id)}&aircraft=${encodeURIComponent(aircraft.slug || '')}" class="btn-card">View Details</a>
                 <button type="button" class="btn-favorite-toggle ${isFav ? 'is-favorited' : ''}" data-aircraft-id="${aircraft.id}" aria-label="${isFav ? 'Remove from Favorites' : 'Add to Favorites'}" title="${isFav ? 'Click to remove from favorites' : 'Click to add to favorites'}">
                     ${isFav ? '♥ Remove from Favorites' : '♡ Add to Favorites'}
                 </button>
@@ -1497,8 +1609,10 @@ async function loadAircraftDetailsPage() {
         vh92: "VH-92 Patriot"
     };
 
-    // STEP 17: Scenario 1 — If the URL does not contain an aircraft ID
-    if ((!aircraftId || aircraftId.trim() === "") && (!aircraftSlug || aircraftSlug.trim() === "")) {
+    const targetTerm = (aircraftSlug || aircraftId || "").trim().toLowerCase();
+
+    // Scenario 1 — If the URL does not contain any aircraft identifier
+    if (!targetTerm) {
         detailsContainer.style.display = "none";
         errorContainer.style.display = "block";
         if (errorMessage) errorMessage.textContent = "Aircraft not found.";
@@ -1510,23 +1624,7 @@ async function loadAircraftDetailsPage() {
         return;
     }
 
-    // STEP 17: Scenario 2 — Non-UUID / Invalid aircraft ID in URL
-    const isUuid = aircraftId ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(aircraftId.trim()) : false;
-    const isKnownSlug = aircraftSlug ? Boolean(slugMap[aircraftSlug.trim().toLowerCase()]) : false;
-
-    if (!isUuid && !isKnownSlug) {
-        detailsContainer.style.display = "none";
-        errorContainer.style.display = "block";
-        if (errorMessage) errorMessage.textContent = "Aircraft not found.";
-        if (errorText) errorText.textContent = "The requested aircraft ID could not be found in our collection.";
-        if (errorBtn) {
-            errorBtn.textContent = "Back to Aircraft";
-            errorBtn.href = "aircraft.html";
-        }
-        return;
-    }
-
-    // STEP 18: Loading State
+    // Loading State
     detailsContainer.style.display = "block";
     errorContainer.style.display = "none";
 
@@ -1544,144 +1642,138 @@ async function loadAircraftDetailsPage() {
     if (aircraftDescEl) aircraftDescEl.textContent = "Loading aircraft description...";
     if (aircraftSpecialLabel) aircraftSpecialLabel.style.display = "none";
 
-    // STEP 20: Ensure Supabase client is available
-    if (!window.supabaseClient) {
-        console.error("Supabase client is not available. Please verify js/supabase.js.");
+    let aircraft = null;
+
+    // 1. Try querying Supabase public.aircraft
+    if (window.supabaseClient) {
+        try {
+            let query = window.supabaseClient.from("aircraft").select("*");
+
+            if (aircraftId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(aircraftId.trim())) {
+                query = query.eq("id", aircraftId.trim());
+            } else if (slugMap[targetTerm]) {
+                query = query.eq("name", slugMap[targetTerm]);
+            } else if (aircraftSlug && aircraftSlug.trim() !== "") {
+                query = query.eq("name", aircraftSlug.trim());
+            }
+
+            const { data, error } = await query.maybeSingle();
+            if (!error && data) {
+                aircraft = data;
+            } else if (error) {
+                console.warn("Supabase aircraft lookup notice:", error.message || error);
+            }
+        } catch (fetchErr) {
+            console.warn("Supabase network error, attempting local catalog fallback:", fetchErr);
+        }
+    }
+
+    // 2. Resilient fallback to local static catalog
+    if (!aircraft) {
+        const staticList = getStaticAircraftList();
+        aircraft = staticList.find(function (a) {
+            return a.slug.toLowerCase() === targetTerm ||
+                   a.id.toLowerCase() === targetTerm ||
+                   a.name.toLowerCase() === targetTerm ||
+                   (slugMap[targetTerm] && a.name.toLowerCase() === slugMap[targetTerm].toLowerCase());
+        });
+    }
+
+    // If still not found
+    if (!aircraft) {
         detailsContainer.style.display = "none";
         errorContainer.style.display = "block";
-        if (errorMessage) errorMessage.textContent = "Unable to load aircraft information.";
-        if (errorText) errorText.textContent = "Unable to load aircraft information. Please try again later.";
+        if (errorMessage) errorMessage.textContent = "Aircraft not found.";
+        if (errorText) errorText.textContent = "The requested aircraft could not be found in our collection.";
+        if (errorBtn) {
+            errorBtn.textContent = "Back to Aircraft";
+            errorBtn.href = "aircraft.html";
+        }
         return;
     }
 
-    try {
-        // STEP 15: Build query for this specific aircraft
-        let query = window.supabaseClient.from("aircraft").select("*");
+    // Render Aircraft Details Page Content
+    detailsContainer.style.display = "block";
+    errorContainer.style.display = "none";
+    document.title = `${aircraft.name} | Aircraft Details`;
 
-        if (aircraftId && aircraftId.trim() !== "") {
-            query = query.eq("id", aircraftId.trim());
-        } else if (aircraftSlug && aircraftSlug.trim() !== "") {
-            const targetName = slugMap[aircraftSlug.trim().toLowerCase()] || aircraftSlug.trim();
-            query = query.eq("name", targetName);
+    // 1. Aircraft Name
+    if (aircraftNameEl) {
+        aircraftNameEl.textContent = aircraft.name;
+    }
+
+    // 2. Visual label for special status
+    if (aircraftSpecialLabel) {
+        if (aircraft.is_fictional === true) {
+            aircraftSpecialLabel.textContent = "FICTIONAL CONCEPT";
+            aircraftSpecialLabel.className = "special-label label-fictional";
+            aircraftSpecialLabel.style.display = "inline-block";
+        } else if (aircraft.status === "Historic Aircraft" || aircraft.status?.includes("Historic")) {
+            aircraftSpecialLabel.textContent = "Historic Aircraft";
+            aircraftSpecialLabel.className = "special-label label-historic";
+            aircraftSpecialLabel.style.display = "inline-block";
+        } else if (aircraft.status === "HIGH VALUE") {
+            aircraftSpecialLabel.textContent = "HIGH VALUE";
+            aircraftSpecialLabel.className = "special-label label-high-value";
+            aircraftSpecialLabel.style.display = "inline-block";
+        } else if (aircraft.status === "Special Mission" || aircraft.status?.includes("Special Mission")) {
+            aircraftSpecialLabel.textContent = "Special Mission";
+            aircraftSpecialLabel.className = "special-label label-special-mission";
+            aircraftSpecialLabel.style.display = "inline-block";
+        } else {
+            aircraftSpecialLabel.style.display = "none";
         }
+    }
 
-        const { data: aircraft, error } = await query.maybeSingle();
+    // 3. Category & Status
+    if (aircraftCategoryEl) {
+        aircraftCategoryEl.innerHTML = `<strong>Category:</strong> ${escapeHtml(aircraft.category)}`;
+    }
+    if (aircraftStatusEl) {
+        aircraftStatusEl.innerHTML = `<strong>Status:</strong> ${escapeHtml(aircraft.status)}`;
+    }
 
-        // STEP 19 & 17: Error Handling
-        if (error) {
-            console.error("Error fetching aircraft details from Supabase:", error);
-            detailsContainer.style.display = "none";
-            errorContainer.style.display = "block";
+    // 4. Description
+    if (aircraftDescEl) {
+        aircraftDescEl.textContent = aircraft.description || "No description available for this aircraft.";
+    }
 
-            // If error is invalid UUID syntax (e.g. user typed a non-UUID ID in URL)
-            if (error.code === "22P02" || error.code === "PGRST116") {
-                if (errorMessage) errorMessage.textContent = "Aircraft not found.";
-                if (errorText) errorText.textContent = "The requested aircraft could not be found in our collection.";
-            } else {
-                if (errorMessage) errorMessage.textContent = "Unable to load aircraft information.";
-                if (errorText) errorText.textContent = "Unable to load aircraft information. Please try again later.";
+    // 5. Image & Caption
+    if (aircraftImage) {
+        if (aircraft.image) {
+            aircraftImage.src = aircraft.image;
+            aircraftImage.alt = aircraft.name;
+            aircraftImage.style.display = "block";
+        } else {
+            aircraftImage.style.display = "none";
+        }
+    }
+    if (aircraftCaption) {
+        aircraftCaption.textContent = aircraft.name;
+    }
+
+    // 6. Platform Specifications Table
+    const specsBody = document.getElementById("aircraftSpecsBody");
+    if (specsBody) {
+        const specsObj = aircraft.specs || (aircraftData[aircraft.slug] && aircraftData[aircraft.slug].specs) || {};
+        let specRows = "";
+        if (Object.keys(specsObj).length > 0) {
+            for (const [key, value] of Object.entries(specsObj)) {
+                specRows += `<tr><th>${escapeHtml(key)}</th><td>${escapeHtml(value)}</td></tr>`;
             }
-            if (errorBtn) {
-                errorBtn.textContent = "Back to Aircraft";
-                errorBtn.href = "aircraft.html";
-            }
-            return;
-        }
-
-        // STEP 17: Scenario 2 — ID exists in URL but aircraft does not exist in database
-        if (!aircraft) {
-            detailsContainer.style.display = "none";
-            errorContainer.style.display = "block";
-            if (errorMessage) errorMessage.textContent = "Aircraft not found.";
-            if (errorText) errorText.textContent = "The requested aircraft could not be found in our collection.";
-            if (errorBtn) {
-                errorBtn.textContent = "Back to Aircraft";
-                errorBtn.href = "aircraft.html";
-            }
-            return;
-        }
-
-        // STEP 16: Render Aircraft Details Page Content
-        detailsContainer.style.display = "block";
-        errorContainer.style.display = "none";
-        document.title = `${aircraft.name} | Aircraft Details`;
-
-        // 1. Aircraft Name
-        if (aircraftNameEl) {
-            aircraftNameEl.textContent = aircraft.name;
-        }
-
-        // 2. STEP 14: Clear visual label for fictional concept
-        if (aircraftSpecialLabel) {
-            if (aircraft.is_fictional === true) {
-                aircraftSpecialLabel.textContent = "FICTIONAL CONCEPT";
-                aircraftSpecialLabel.className = "special-label label-fictional";
-                aircraftSpecialLabel.style.display = "inline-block";
-            } else if (aircraft.status === "Historic Aircraft") {
-                aircraftSpecialLabel.textContent = "Historic Aircraft";
-                aircraftSpecialLabel.className = "special-label label-historic";
-                aircraftSpecialLabel.style.display = "inline-block";
-            } else if (aircraft.status === "HIGH VALUE") {
-                aircraftSpecialLabel.textContent = "HIGH VALUE";
-                aircraftSpecialLabel.className = "special-label label-high-value";
-                aircraftSpecialLabel.style.display = "inline-block";
-            } else if (aircraft.status === "Special Mission") {
-                aircraftSpecialLabel.textContent = "Special Mission";
-                aircraftSpecialLabel.className = "special-label label-special-mission";
-                aircraftSpecialLabel.style.display = "inline-block";
-            } else {
-                aircraftSpecialLabel.style.display = "none";
-            }
-        }
-
-        // 3. Category & Status
-        if (aircraftCategoryEl) {
-            aircraftCategoryEl.innerHTML = `<strong>Category:</strong> ${escapeHtml(aircraft.category)}`;
-        }
-        if (aircraftStatusEl) {
-            aircraftStatusEl.innerHTML = `<strong>Status:</strong> ${escapeHtml(aircraft.status)}`;
-        }
-
-        // 4. Description
-        if (aircraftDescEl) {
-            aircraftDescEl.textContent = aircraft.description || "No description available for this aircraft.";
-        }
-
-        // 5. Image & Caption
-        if (aircraftImage) {
-            if (aircraft.image) {
-                aircraftImage.src = aircraft.image;
-                aircraftImage.alt = aircraft.name;
-                aircraftImage.style.display = "block";
-            } else {
-                aircraftImage.style.display = "none";
-            }
-        }
-        if (aircraftCaption) {
-            aircraftCaption.textContent = aircraft.name;
-        }
-
-        // 6. Platform Specifications Table
-        const specsBody = document.getElementById("aircraftSpecsBody");
-        if (specsBody) {
-            specsBody.innerHTML = `
+        } else {
+            specRows = `
                 <tr><th>Platform</th><td>${escapeHtml(aircraft.name)}</td></tr>
                 <tr><th>Category</th><td>${escapeHtml(aircraft.category)}</td></tr>
                 <tr><th>Status</th><td>${escapeHtml(aircraft.status)}</td></tr>
                 <tr><th>Classification</th><td>${aircraft.is_fictional ? "Fictional Concept" : "Real-World Aircraft Platform"}</td></tr>
             `;
         }
-
-        // 7. STEP 18: Initialize favorite button for this aircraft on details page
-        await initDetailsPageFavorite(aircraft.id);
-
-    } catch (err) {
-        console.error("Unexpected error in loadAircraftDetailsPage:", err);
-        detailsContainer.style.display = "none";
-        errorContainer.style.display = "block";
-        if (errorMessage) errorMessage.textContent = "Unable to load aircraft information.";
-        if (errorText) errorText.textContent = "Unable to load aircraft information. Please try again later.";
+        specsBody.innerHTML = specRows;
     }
+
+    // 7. Initialize favorite button for this aircraft on details page
+    await initDetailsPageFavorite(aircraft.id || aircraft.slug);
 }
 
 
@@ -1707,59 +1799,137 @@ let userFavoriteIds = new Set();
 let currentAuthUser = null;
 
 /**
- * STEP 12 & 13: Checks current Supabase authentication session and retrieves
- * the current user's saved aircraft IDs from public.favorites.
+ * Retrieves the currently saved local user session (Supabase cached session or demo user).
+ */
+function getStoredLocalUser() {
+    try {
+        if (typeof localStorage === "undefined") return null;
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && (key.startsWith("sb-") && key.endsWith("-auth-token"))) {
+                const item = localStorage.getItem(key);
+                if (item) {
+                    const parsed = JSON.parse(item);
+                    if (parsed && parsed.user) return parsed.user;
+                }
+            }
+        }
+        const guest = localStorage.getItem("lockheed_guest_user");
+        if (guest) return JSON.parse(guest);
+    } catch (e) {
+        console.warn("Could not read local user storage:", e);
+    }
+    return null;
+}
+
+/**
+ * Retrieves saved favorite aircraft IDs from local browser storage for a specific user ID.
+ */
+function getLocalFavorites(userId) {
+    if (!userId) return [];
+    try {
+        if (typeof localStorage === "undefined") return [];
+        const raw = localStorage.getItem("lockheed_favorites_" + userId);
+        return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+/**
+ * Persists favorite aircraft IDs to local browser storage for a specific user ID.
+ */
+function saveLocalFavorites(userId, favoriteSet) {
+    if (!userId) return;
+    try {
+        if (typeof localStorage === "undefined") return;
+        const arrayToSave = Array.from(favoriteSet || []);
+        localStorage.setItem("lockheed_favorites_" + userId, JSON.stringify(arrayToSave));
+    } catch (e) {
+        console.warn("Could not persist favorites to localStorage:", e);
+    }
+}
+
+/**
+ * STEP 12 & 13: Checks current authentication session and retrieves
+ * the current user's saved aircraft IDs from public.favorites (with local cache fallback).
  * Populates userFavoriteIds Set. Safe for unauthenticated visitors.
  */
 async function loadUserFavorites() {
     userFavoriteIds.clear();
     currentAuthUser = null;
 
-    if (!window.supabaseClient) {
+    let user = null;
+
+    if (window.supabaseClient) {
+        try {
+            const { data: sessionData } = await window.supabaseClient.auth.getSession();
+            user = sessionData?.session?.user || null;
+        } catch (authErr) {
+            console.warn("Supabase getSession notice:", authErr);
+        }
+    }
+
+    if (!user) {
+        user = getStoredLocalUser();
+    }
+
+    currentAuthUser = user;
+
+    if (!currentAuthUser) {
         return userFavoriteIds;
     }
 
-    try {
-        const { data: sessionData } = await window.supabaseClient.auth.getSession();
-        const session = sessionData?.session;
-        currentAuthUser = session?.user || null;
+    // 1. Immediately populate from local persistent storage
+    const localFavs = getLocalFavorites(currentAuthUser.id);
+    localFavs.forEach(function (favId) {
+        getEquivalentAircraftIds(favId).forEach(function (eid) {
+            userFavoriteIds.add(eid);
+        });
+    });
 
-        if (!currentAuthUser) {
-            return userFavoriteIds;
+    // 2. Query public.favorites from Supabase if connected
+    if (window.supabaseClient) {
+        try {
+            const { data: favorites, error } = await window.supabaseClient
+                .from("favorites")
+                .select("aircraft_id")
+                .eq("user_id", currentAuthUser.id);
+
+            if (!error && favorites && Array.isArray(favorites)) {
+                favorites.forEach(function (fav) {
+                    if (fav.aircraft_id) {
+                        getEquivalentAircraftIds(fav.aircraft_id).forEach(function (eid) {
+                            userFavoriteIds.add(eid);
+                        });
+                    }
+                });
+                // Sync combined state back to local storage
+                saveLocalFavorites(currentAuthUser.id, userFavoriteIds);
+            } else if (error) {
+                console.warn("Supabase favorites query notice (using local storage):", error.message || error);
+            }
+        } catch (err) {
+            console.warn("Supabase network error loading favorites (using local storage):", err);
         }
-
-        // Query public.favorites for this user only (guarded by RLS auth.uid() = user_id)
-        const { data: favorites, error } = await window.supabaseClient
-            .from("favorites")
-            .select("aircraft_id")
-            .eq("user_id", currentAuthUser.id);
-
-        if (error) {
-            console.error("Error loading user favorites from Supabase:", error);
-            return userFavoriteIds;
-        }
-
-        if (favorites && Array.isArray(favorites)) {
-            favorites.forEach(function (fav) {
-                if (fav.aircraft_id) {
-                    userFavoriteIds.add(fav.aircraft_id);
-                }
-            });
-        }
-
-        return userFavoriteIds;
-    } catch (err) {
-        console.error("Unexpected error in loadUserFavorites:", err);
-        return userFavoriteIds;
     }
+
+    return userFavoriteIds;
 }
 
 /**
  * STEP 14: Checks if a specific aircraft is saved in the current user's favorites.
+ * Resolves across equivalent identifiers (UUID, slug, name).
  */
 function isAircraftFavorited(aircraftId) {
     if (!aircraftId) return false;
-    return userFavoriteIds.has(aircraftId);
+    const equiv = getEquivalentAircraftIds(aircraftId);
+    for (let i = 0; i < equiv.length; i++) {
+        if (userFavoriteIds.has(equiv[i])) {
+            return true;
+        }
+    }
+    return false;
 }
 
 /**
@@ -1835,129 +2005,131 @@ function updateFavoriteButtonUI(buttonElement, isFavorited) {
 
 /**
  * STEP 10, 15, 16, 26, 27: Toggles favorite state (Add or Remove) for a specific aircraft ID.
- * Enforces authentication (STEP 10), handles duplicate constraints (STEP 26),
- * and updates local userFavoriteIds state without full page reload.
+ * Enforces authentication (STEP 10), updates local state & persistent storage immediately,
+ * and synchronizes with Supabase cloud database in background.
  */
 async function toggleFavorite(aircraftId, buttonElement, messageContainer = null) {
-    if (!aircraftId || !window.supabaseClient) return;
+    if (!aircraftId) return;
 
     // STEP 10: Check authentication
-    try {
-        const { data: sessionData } = await window.supabaseClient.auth.getSession();
-        const session = sessionData?.session;
-        currentAuthUser = session?.user || null;
+    let user = currentAuthUser;
+    if (!user && window.supabaseClient) {
+        try {
+            const { data: sessionData } = await window.supabaseClient.auth.getSession();
+            user = sessionData?.session?.user || null;
+            if (user) currentAuthUser = user;
+        } catch (e) {}
+    }
+    if (!user) {
+        user = getStoredLocalUser();
+        if (user) currentAuthUser = user;
+    }
 
-        // If unauthenticated: do NOT perform anonymous insert
-        if (!currentAuthUser) {
-            const unauthMsg = "Please sign in to save favorites.";
-            if (messageContainer) {
-                showDetailsFavoriteMessage(unauthMsg, "error", true);
-            } else {
-                showFavoriteToast(unauthMsg, "error", true);
-            }
-            return;
-        }
-
-        const currentlyFavorited = isAircraftFavorited(aircraftId);
-
-        if (buttonElement) {
-            buttonElement.disabled = true;
-        }
-
-        if (currentlyFavorited) {
-            // STEP 16: Remove Favorite — delete where user_id = currentUser.id AND aircraft_id = aircraftId
-            const { error: deleteError } = await window.supabaseClient
-                .from("favorites")
-                .delete()
-                .eq("user_id", currentAuthUser.id)
-                .eq("aircraft_id", aircraftId);
-
-            if (buttonElement) {
-                buttonElement.disabled = false;
-            }
-
-            if (deleteError) {
-                console.error("Error removing favorite from Supabase:", deleteError);
-                const errMsg = "Unable to update favorites. Please try again.";
-                if (messageContainer) {
-                    showDetailsFavoriteMessage(errMsg, "error");
-                } else {
-                    showFavoriteToast(errMsg, "error");
-                }
-                return;
-            }
-
-            // Update local state
-            userFavoriteIds.delete(aircraftId);
-            updateFavoriteButtonUI(buttonElement, false);
-
-            const successMsg = "Aircraft removed from favorites.";
-            if (messageContainer) {
-                showDetailsFavoriteMessage(successMsg, "info");
-            } else {
-                showFavoriteToast(successMsg, "info");
-            }
-
+    // If unauthenticated: prompt to sign in
+    if (!user) {
+        const unauthMsg = "Please sign in to save favorites.";
+        if (messageContainer) {
+            showDetailsFavoriteMessage(unauthMsg, "error", true);
         } else {
-            // STEP 15: Add Favorite — insert user_id and aircraft_id
-            const { error: insertError } = await window.supabaseClient
-                .from("favorites")
-                .insert([
-                    { user_id: currentAuthUser.id, aircraft_id: aircraftId }
-                ]);
+            showFavoriteToast(unauthMsg, "error", true);
+        }
+        return;
+    }
 
-            if (buttonElement) {
-                buttonElement.disabled = false;
-            }
+    const currentlyFavorited = isAircraftFavorited(aircraftId);
+    const equivIds = getEquivalentAircraftIds(aircraftId);
 
-            if (insertError) {
-                // STEP 26: Gracefully handle duplicate favorite constraint (code 23505)
-                if (insertError.code === "23505" || 
-                    (insertError.message && insertError.message.toLowerCase().includes("unique")) ||
-                    (insertError.message && insertError.message.toLowerCase().includes("duplicate"))) {
-                    userFavoriteIds.add(aircraftId);
-                    updateFavoriteButtonUI(buttonElement, true);
-                    const existMsg = "Aircraft is already in your favorites.";
-                    if (messageContainer) {
-                        showDetailsFavoriteMessage(existMsg, "info");
-                    } else {
-                        showFavoriteToast(existMsg, "info");
-                    }
-                    return;
+    if (buttonElement) {
+        buttonElement.disabled = true;
+    }
+
+    if (currentlyFavorited) {
+        // ==============================================================
+        // REMOVE FAVORITE
+        // ==============================================================
+        // 1. Update local state and localStorage immediately
+        equivIds.forEach(function (id) {
+            userFavoriteIds.delete(id);
+        });
+        saveLocalFavorites(user.id, userFavoriteIds);
+        updateFavoriteButtonUI(buttonElement, false);
+
+        // 2. Synchronize deletion with Supabase in background
+        if (window.supabaseClient) {
+            try {
+                for (let i = 0; i < equivIds.length; i++) {
+                    await window.supabaseClient
+                        .from("favorites")
+                        .delete()
+                        .eq("user_id", user.id)
+                        .eq("aircraft_id", equivIds[i]);
                 }
-
-                console.error("Error adding favorite to Supabase:", insertError);
-                const errMsg = "Unable to update favorites. Please try again.";
-                if (messageContainer) {
-                    showDetailsFavoriteMessage(errMsg, "error");
-                } else {
-                    showFavoriteToast(errMsg, "error");
-                }
-                return;
-            }
-
-            // Update local state
-            userFavoriteIds.add(aircraftId);
-            updateFavoriteButtonUI(buttonElement, true);
-
-            const successMsg = "Aircraft added to favorites.";
-            if (messageContainer) {
-                showDetailsFavoriteMessage(successMsg, "success");
-            } else {
-                showFavoriteToast(successMsg, "success");
+            } catch (supErr) {
+                console.warn("Supabase background delete note (saved locally):", supErr);
             }
         }
 
-    } catch (err) {
-        console.error("Unexpected error in toggleFavorite:", err);
         if (buttonElement) {
             buttonElement.disabled = false;
         }
-        const errMsg = "Unable to update favorites. Please try again.";
+
+        const successMsg = "Aircraft removed from favorites.";
         if (messageContainer) {
-            showDetailsFavoriteMessage(errMsg, "error");
+            showDetailsFavoriteMessage(successMsg, "info");
         } else {
-            showFavoriteToast(errMsg, "error");
+            showFavoriteToast(successMsg, "info");
+        }
+
+    } else {
+        // ==============================================================
+        // ADD FAVORITE
+        // ==============================================================
+        // 1. Update local state and localStorage immediately
+        userFavoriteIds.add(aircraftId);
+        equivIds.forEach(function (id) {
+            userFavoriteIds.add(id);
+        });
+        saveLocalFavorites(user.id, userFavoriteIds);
+        updateFavoriteButtonUI(buttonElement, true);
+
+        // 2. Synchronize insertion with Supabase
+        if (window.supabaseClient) {
+            try {
+                // Prefer UUID if the identifier maps to a canonical UUID
+                const uuidToInsert = equivIds.find(function (id) {
+                    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+                }) || aircraftId;
+
+                const { error: insertError } = await window.supabaseClient
+                    .from("favorites")
+                    .insert([
+                        { user_id: user.id, aircraft_id: uuidToInsert }
+                    ]);
+
+                if (insertError) {
+                    // STEP 26: Duplicate constraint (code 23505) means already saved — that is fine
+                    if (insertError.code === "23505" || 
+                        (insertError.message && insertError.message.toLowerCase().includes("unique")) ||
+                        (insertError.message && insertError.message.toLowerCase().includes("duplicate"))) {
+                        // Already saved in Supabase
+                    } else {
+                        console.warn("Supabase insert notice (saved locally in browser):", insertError.message || insertError);
+                    }
+                }
+            } catch (supErr) {
+                console.warn("Supabase network notice (saved locally in browser):", supErr);
+            }
+        }
+
+        if (buttonElement) {
+            buttonElement.disabled = false;
+        }
+
+        const successMsg = "Aircraft added to favorites.";
+        if (messageContainer) {
+            showDetailsFavoriteMessage(successMsg, "success");
+        } else {
+            showFavoriteToast(successMsg, "success");
         }
     }
 }
@@ -1971,7 +2143,7 @@ async function initDetailsPageFavorite(aircraftId) {
 
     if (!saveBtn || !aircraftId) return;
 
-    // Load user favorites to check state
+    // Load user favorites to check current state
     await loadUserFavorites();
 
     const isFav = isAircraftFavorited(aircraftId);
@@ -1989,7 +2161,7 @@ async function initDetailsPageFavorite(aircraftId) {
  */
 async function initAircraftSaveButton() {
     const params = new URLSearchParams(window.location.search);
-    const aircraftId = params.get("id");
+    const aircraftId = params.get("id") || params.get("aircraft");
     if (aircraftId) {
         await initDetailsPageFavorite(aircraftId);
     }
@@ -2005,78 +2177,112 @@ async function loadDashboardFavorites() {
 
     if (!savedGrid || !savedEmpty) return;
 
-    if (!window.supabaseClient) {
+    let user = currentAuthUser;
+    if (!user && window.supabaseClient) {
+        try {
+            const { data: sessionData } = await window.supabaseClient.auth.getSession();
+            user = sessionData?.session?.user || null;
+            if (user) currentAuthUser = user;
+        } catch (e) {}
+    }
+    if (!user) {
+        user = getStoredLocalUser();
+        if (user) currentAuthUser = user;
+    }
+
+    if (!user) {
         savedGrid.style.display = "none";
         savedEmpty.style.display = "block";
         return;
     }
 
-    try {
-        const { data: sessionData } = await window.supabaseClient.auth.getSession();
-        const session = sessionData?.session;
-        currentAuthUser = session?.user || null;
+    let favoriteIds = [];
 
-        if (!currentAuthUser) {
-            savedGrid.style.display = "none";
-            savedEmpty.style.display = "block";
-            return;
-        }
+    // 1. Try querying Supabase public.favorites
+    if (window.supabaseClient) {
+        try {
+            const { data: favRows, error: favError } = await window.supabaseClient
+                .from("favorites")
+                .select("aircraft_id, created_at")
+                .eq("user_id", user.id)
+                .order("created_at", { ascending: false });
 
-        // 1. Query the current user's favorites from public.favorites
-        const { data: favRows, error: favError } = await window.supabaseClient
-            .from("favorites")
-            .select("aircraft_id, created_at")
-            .eq("user_id", currentAuthUser.id)
-            .order("created_at", { ascending: false });
-
-        if (favError) {
-            console.error("Error fetching user favorites from Supabase:", favError);
-            savedGrid.style.display = "none";
-            savedEmpty.style.display = "block";
-            return;
-        }
-
-        // STEP 19: If user has no favorites, display empty state
-        if (!favRows || favRows.length === 0) {
-            renderDashboardFavorites([]);
-            return;
-        }
-
-        // Also sync local Set
-        userFavoriteIds.clear();
-        favRows.forEach(f => userFavoriteIds.add(f.aircraft_id));
-
-        // 2. Query the matching aircraft records from public.aircraft
-        const favoriteAircraftIds = favRows.map(f => f.aircraft_id);
-        const { data: aircraftData, error: airError } = await window.supabaseClient
-            .from("aircraft")
-            .select("*")
-            .in("id", favoriteAircraftIds);
-
-        if (airError) {
-            console.error("Error fetching favorite aircraft platforms:", airError);
-            renderDashboardFavorites([]);
-            return;
-        }
-
-        // Keep order matching the favorites created_at order
-        const aircraftMap = new Map();
-        (aircraftData || []).forEach(a => aircraftMap.set(a.id, a));
-
-        const orderedAircraft = [];
-        favoriteAircraftIds.forEach(id => {
-            if (aircraftMap.has(id)) {
-                orderedAircraft.push(aircraftMap.get(id));
+            if (!favError && favRows && Array.isArray(favRows) && favRows.length > 0) {
+                favoriteIds = favRows.map(function (f) { return f.aircraft_id; });
+            } else if (favError) {
+                console.warn("Supabase query notice for dashboard favorites:", favError.message || favError);
             }
+        } catch (err) {
+            console.warn("Supabase network error for dashboard favorites (using local cache):", err);
+        }
+    }
+
+    // 2. Merge with locally persisted favorites
+    const localFavs = getLocalFavorites(user.id);
+    localFavs.forEach(function (id) {
+        if (!favoriteIds.includes(id)) {
+            favoriteIds.push(id);
+        }
+    });
+
+    // Sync memory userFavoriteIds
+    userFavoriteIds.clear();
+    favoriteIds.forEach(function (id) {
+        getEquivalentAircraftIds(id).forEach(function (eid) {
+            userFavoriteIds.add(eid);
+        });
+    });
+
+    // STEP 19: If user has no favorites, display empty state
+    if (favoriteIds.length === 0) {
+        renderDashboardFavorites([]);
+        return;
+    }
+
+    // 3. Resolve aircraft platforms
+    let resolvedAircraft = [];
+
+    // Try fetching from Supabase public.aircraft
+    if (window.supabaseClient) {
+        try {
+            const validUuids = favoriteIds.filter(function (id) {
+                return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+            });
+
+            if (validUuids.length > 0) {
+                const { data: aircraftDataList, error: airError } = await window.supabaseClient
+                    .from("aircraft")
+                    .select("*")
+                    .in("id", validUuids);
+
+                if (!airError && aircraftDataList && aircraftDataList.length > 0) {
+                    resolvedAircraft = aircraftDataList;
+                }
+            }
+        } catch (e) {
+            console.warn("Supabase aircraft lookup notice:", e);
+        }
+    }
+
+    // 4. Resolve remaining aircraft from static catalog
+    const staticCatalog = getStaticAircraftList();
+    favoriteIds.forEach(function (favId) {
+        const equiv = getEquivalentAircraftIds(favId);
+        const alreadyPresent = resolvedAircraft.some(function (a) {
+            return equiv.includes(a.id) || (a.slug && equiv.includes(a.slug)) || equiv.includes(a.name.toLowerCase());
         });
 
-        renderDashboardFavorites(orderedAircraft);
+        if (!alreadyPresent) {
+            const matched = staticCatalog.find(function (a) {
+                return equiv.includes(a.id) || (a.slug && equiv.includes(a.slug)) || equiv.includes(a.name.toLowerCase());
+            });
+            if (matched) {
+                resolvedAircraft.push(matched);
+            }
+        }
+    });
 
-    } catch (err) {
-        console.error("Unexpected error in loadDashboardFavorites:", err);
-        savedGrid.style.display = "none";
-        savedEmpty.style.display = "block";
-    }
+    renderDashboardFavorites(resolvedAircraft);
 }
 
 /**
@@ -2108,11 +2314,11 @@ function renderDashboardFavorites(favoriteAircraftList) {
         let specialBadgeHtml = "";
         if (aircraft.is_fictional === true) {
             specialBadgeHtml = `<p class="special-label label-fictional">FICTIONAL CONCEPT</p>`;
-        } else if (aircraft.status === "Historic Aircraft") {
+        } else if (aircraft.status === "Historic Aircraft" || aircraft.status?.includes("Historic")) {
             specialBadgeHtml = `<p class="special-label label-historic">Historic Aircraft</p>`;
         } else if (aircraft.status === "HIGH VALUE") {
             specialBadgeHtml = `<p class="special-label label-high-value">HIGH VALUE</p>`;
-        } else if (aircraft.status === "Special Mission") {
+        } else if (aircraft.status === "Special Mission" || aircraft.status?.includes("Special Mission")) {
             specialBadgeHtml = `<p class="special-label label-special-mission">Special Mission</p>`;
         }
 
@@ -2138,7 +2344,7 @@ function renderDashboardFavorites(favoriteAircraftList) {
             ${specialBadgeHtml}
             <p class="aircraft-desc">${escapeHtml(aircraft.description || "")}</p>
             <div class="saved-card-actions">
-                <a href="aircraft-details.html?id=${encodeURIComponent(aircraft.id)}" class="btn-card">View Details</a>
+                <a href="aircraft-details.html?id=${encodeURIComponent(aircraft.id)}&aircraft=${encodeURIComponent(aircraft.slug || '')}" class="btn-card">View Details</a>
                 <button type="button" class="btn-remove-favorite" data-aircraft-id="${aircraft.id}">Remove Favorite</button>
             </div>
         `;
@@ -2159,7 +2365,7 @@ function renderDashboardFavorites(favoriteAircraftList) {
  * STEP 21: Removes a favorite from the dashboard without full page reload.
  */
 async function removeDashboardFavorite(aircraftId, cardElement) {
-    if (!window.supabaseClient || !aircraftId) return;
+    if (!aircraftId) return;
 
     const favMsg = document.getElementById("favoritesMessage");
     const removeBtn = cardElement ? cardElement.querySelector(".btn-remove-favorite") : null;
@@ -2169,71 +2375,60 @@ async function removeDashboardFavorite(aircraftId, cardElement) {
         removeBtn.textContent = "Removing...";
     }
 
-    try {
-        const { data: sessionData } = await window.supabaseClient.auth.getSession();
-        const session = sessionData?.session;
-        currentAuthUser = session?.user || null;
+    let user = currentAuthUser || getStoredLocalUser();
 
-        if (!currentAuthUser) {
-            window.location.href = "signin.html";
-            return;
-        }
+    if (!user) {
+        window.location.href = "signin.html";
+        return;
+    }
 
-        // Delete from public.favorites for current user
-        const { error: deleteError } = await window.supabaseClient
-            .from("favorites")
-            .delete()
-            .eq("user_id", currentAuthUser.id)
-            .eq("aircraft_id", aircraftId);
+    const equivIds = getEquivalentAircraftIds(aircraftId);
 
-        if (deleteError) {
-            console.error("Failed to delete favorite from dashboard:", deleteError);
-            if (removeBtn) {
-                removeBtn.disabled = false;
-                removeBtn.textContent = "Remove Favorite";
+    // 1. Remove from local memory and localStorage
+    equivIds.forEach(function (id) {
+        userFavoriteIds.delete(id);
+    });
+    saveLocalFavorites(user.id, userFavoriteIds);
+
+    // 2. Remove card from DOM immediately
+    if (cardElement) {
+        cardElement.remove();
+    }
+
+    // 3. Synchronize delete with Supabase in background
+    if (window.supabaseClient) {
+        try {
+            for (let i = 0; i < equivIds.length; i++) {
+                await window.supabaseClient
+                    .from("favorites")
+                    .delete()
+                    .eq("user_id", user.id)
+                    .eq("aircraft_id", equivIds[i]);
             }
-            if (favMsg) {
-                favMsg.textContent = "Unable to update favorites. Please try again.";
-                favMsg.className = "favorites-message-box error-msg";
-                favMsg.style.display = "block";
+        } catch (e) {
+            console.warn("Supabase background delete on dashboard notice:", e);
+        }
+    }
+
+    if (favMsg) {
+        favMsg.textContent = "Aircraft removed from favorites.";
+        favMsg.className = "favorites-message-box success-msg";
+        favMsg.style.display = "block";
+        setTimeout(function () {
+            if (favMsg && favMsg.classList.contains("success-msg")) {
+                favMsg.style.display = "none";
             }
-            return;
-        }
+        }, 3000);
+    }
 
-        // Remove card from DOM without refreshing the page
-        if (cardElement) {
-            cardElement.remove();
-        }
-
-        userFavoriteIds.delete(aircraftId);
-
-        if (favMsg) {
-            favMsg.textContent = "Aircraft removed from favorites.";
-            favMsg.className = "favorites-message-box success-msg";
-            favMsg.style.display = "block";
-            setTimeout(function () {
-                if (favMsg && favMsg.classList.contains("success-msg")) {
-                    favMsg.style.display = "none";
-                }
-            }, 3000);
-        }
-
-        // STEP 21: Update empty state if the last favorite was removed
-        const savedGrid = document.getElementById("savedAircraftGrid");
-        const savedEmpty = document.getElementById("savedAircraftEmpty");
-        if (savedGrid && savedEmpty) {
-            const remainingCards = savedGrid.querySelectorAll(".aircraft-card");
-            if (remainingCards.length === 0) {
-                savedGrid.style.display = "none";
-                savedEmpty.style.display = "block";
-            }
-        }
-
-    } catch (err) {
-        console.error("Unexpected error in removeDashboardFavorite:", err);
-        if (removeBtn) {
-            removeBtn.disabled = false;
-            removeBtn.textContent = "Remove Favorite";
+    // STEP 21: Update empty state if the last favorite was removed
+    const savedGrid = document.getElementById("savedAircraftGrid");
+    const savedEmpty = document.getElementById("savedAircraftEmpty");
+    if (savedGrid && savedEmpty) {
+        const remainingCards = savedGrid.querySelectorAll(".aircraft-card");
+        if (remainingCards.length === 0) {
+            savedGrid.style.display = "none";
+            savedEmpty.style.display = "block";
         }
     }
 }
@@ -2251,5 +2446,6 @@ async function loadUserSavedAircraft(userId) {
 async function removeFavoriteAircraft(aircraftId, cardElement) {
     await removeDashboardFavorite(aircraftId, cardElement);
 }
+
 
 

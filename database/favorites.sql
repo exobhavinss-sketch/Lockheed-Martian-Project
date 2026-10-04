@@ -30,6 +30,7 @@ COMMENT ON TABLE public.favorites IS
 ALTER TABLE public.favorites ENABLE ROW LEVEL SECURITY;
 
 -- STEP 4: SELECT Policy — Authenticated users can view only their own favorites
+DROP POLICY IF EXISTS "Users can view their own favorites" ON public.favorites;
 CREATE POLICY "Users can view their own favorites"
     ON public.favorites
     FOR SELECT
@@ -37,6 +38,8 @@ CREATE POLICY "Users can view their own favorites"
     USING ((select auth.uid()) = user_id);
 
 -- STEP 5: INSERT Policy — Authenticated users can insert only their own favorites
+DROP POLICY IF EXISTS "Users can add their own favorites" ON public.favorites;
+DROP POLICY IF EXISTS "Users can insert their own favorites" ON public.favorites;
 CREATE POLICY "Users can add their own favorites"
     ON public.favorites
     FOR INSERT
@@ -44,8 +47,19 @@ CREATE POLICY "Users can add their own favorites"
     WITH CHECK ((select auth.uid()) = user_id);
 
 -- STEP 6: DELETE Policy — Authenticated users can delete only their own favorites
+DROP POLICY IF EXISTS "Users can delete their own favorites" ON public.favorites;
 CREATE POLICY "Users can delete their own favorites"
     ON public.favorites
     FOR DELETE
     TO authenticated
     USING ((select auth.uid()) = user_id);
+
+-- =============================================================================
+-- DATABASE VERIFICATION QUERIES
+-- Run the queries below in the Supabase SQL Editor to verify RLS configuration:
+-- =============================================================================
+-- 1. Verify RLS is enabled on public.favorites:
+-- SELECT tablename, rowsecurity FROM pg_tables WHERE schemaname = 'public' AND tablename = 'favorites';
+-- 2. Verify all policies on public.favorites:
+-- SELECT policyname, permissive, roles, cmd, qual, with_check FROM pg_policies WHERE schemaname = 'public' AND tablename = 'favorites';
+
