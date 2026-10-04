@@ -1,4 +1,23 @@
+<p align="center">
+  <img src="images/logo.png" alt="Lockheed Martin Aircraft Educational Project Logo" width="380">
+</p>
+
+<p align="center">
+  <img src="images/favicon.png" alt="Lockheed Martin Favicon" width="42" height="42" style="vertical-align: middle;">
+  &nbsp;
+  <strong>Lockheed Martin Aircraft — Educational Web Platform</strong>
+</p>
+
+---
+
 # Lockheed Martin Aircraft Educational Website
+
+## Visual Identity & Branding
+
+| Asset | Preview | Description | File Locations |
+| :--- | :---: | :--- | :--- |
+| **Primary Logo** | <img src="images/logo.png" alt="Lockheed Martin Project Logo" width="240"> | Header navigation banner and main branding identity across all pages | [`images/logo.png`](images/logo.png)<br>[`Favicon And Logo/Logo.png`](Favicon%20And%20Logo/Logo.png) |
+| **Browser Favicon** | <img src="images/favicon.png" alt="Project Favicon" width="48" height="48"> | High-resolution browser tab icon and mobile touch bookmark badge | [`images/favicon.png`](images/favicon.png)<br>[`Favicon And Logo/Favicon.png`](Favicon%20And%20Logo/Favicon.png) |
 
 ## Description
 
@@ -88,6 +107,14 @@ Lockheed Martin Project/
 │   └── supabase.js         # Supabase client initialization
 │
 ├── images/                 # Aircraft photographs, illustrations, and SVG assets
+│   ├── logo.png            # Primary website header logo
+│   └── favicon.png         # Browser favicon icon
+│
+├── Favicon And Logo/       # High-resolution original logo and favicon master assets
+│   ├── Logo.png            # High-res logo source file
+│   └── Favicon.png         # High-res favicon source file
+│
+├── Homepage Images/        # Curated gallery and showcase imagery for landing page
 │
 ├── database/
 │   ├── aircraft.sql        # Supabase PostgreSQL aircraft catalog schema & seed
